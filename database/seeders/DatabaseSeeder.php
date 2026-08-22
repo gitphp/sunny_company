@@ -17,18 +17,18 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(AuthMenuSeeder::class);
 
-        if (User::query()->where('user_name', 'admin')->exists()) {
-            return;
+        if (! User::query()->where('user_name', 'admin')->exists()) {
+            User::factory()->create([
+                'id' => 934035802554576899,
+                'user_name' => 'admin',
+                'real_name' => '管理员',
+                'user_mobile' => '13800000000',
+                'user_email' => 'admin@example.com',
+                'password_hash' => 'password',
+                'register_channel' => 'web',
+            ]);
         }
 
-        User::factory()->create([
-            'id' => 934035802554576899,
-            'user_name' => 'admin',
-            'real_name' => '管理员',
-            'user_mobile' => '13800000000',
-            'user_email' => 'admin@example.com',
-            'password_hash' => 'password',
-            'register_channel' => 'web',
-        ]);
+        $this->call(RbacSeeder::class);
     }
 }

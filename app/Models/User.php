@@ -9,6 +9,8 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -30,6 +32,7 @@ use Illuminate\Notifications\Notifiable;
     'register_device',
     'register_channel',
     'real_auth_status',
+    'dept_id',
 ])]
 #[Hidden(['password_hash', 'password_salt'])]
 class User extends Authenticatable
@@ -119,6 +122,16 @@ class User extends Authenticatable
             UserStatus::Cancelled => '账号已注销',
             default => '账号状态异常，无法登录',
         };
+    }
+
+    public function department(): BelongsTo
+    {
+        return $this->belongsTo(HrDepartment::class, 'dept_id');
+    }
+
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(AuthRole::class, 'auth_user_role', 'user_id', 'role_id');
     }
 
     public function getEmailForPasswordReset(): string

@@ -28,6 +28,9 @@ class StoreUserRequest extends FormRequest
             'register_channel' => ['nullable', 'string', 'max:32'],
             'lock_reason' => ['nullable', 'string', 'max:255'],
             'lock_expire_time' => ['nullable', 'date'],
+            'dept_id' => ['nullable', 'string'],
+            'role_ids' => ['nullable', 'array'],
+            'role_ids.*' => ['string'],
         ];
     }
 

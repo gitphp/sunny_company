@@ -154,6 +154,24 @@ a {
     min-height: calc(100% - 4px);
 }
 
+.split-layout {
+    display: flex;
+    gap: 16px;
+    min-height: 520px;
+}
+
+.split-side {
+    width: 240px;
+    flex-shrink: 0;
+    border-right: 1px solid #ebeef5;
+    padding-right: 12px;
+}
+
+.split-main {
+    flex: 1;
+    min-width: 0;
+}
+
 .admin-footer {
     height: 36px;
     display: flex;

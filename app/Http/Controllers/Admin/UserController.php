@@ -9,7 +9,10 @@ use App\Http\Requests\Admin\StoreUserRequest;
 use App\Http\Requests\Admin\UpdateUserRequest;
 use App\Http\Requests\Admin\UserIndexRequest;
 use App\Http\Resources\Admin\UserResource;
+use App\Models\AuthRole;
+use App\Models\HrDepartment;
 use App\Models\User;
+use App\Services\RbacService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,11 +20,14 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class UserController extends Controller
 {
+    public function __construct(private readonly RbacService $rbac) {}
+
     public function index(UserIndexRequest $request): JsonResponse
     {
         $perPage = (int) $request->integer('per_page', 10);
 
         $paginator = $this->filteredQuery($request)
+            ->with(['department', 'roles'])
             ->orderByDesc('created_at')
             ->paginate($perPage)
             ->withQueryString();
@@ -40,6 +46,7 @@ class UserController extends Controller
     public function store(StoreUserRequest $request): JsonResponse
     {
         $user = User::query()->create($this->payload($request, true));
+        $this->syncRoles($user, $request);
 
         return response()->json([
             'message' => '新增成功',
@@ -50,7 +57,7 @@ class UserController extends Controller
     public function show(User $user): JsonResponse
     {
         return response()->json([
-            'user' => UserResource::make($user)->resolve(),
+            'user' => UserResource::make($user->load(['department', 'roles']))->resolve(),
         ]);
     }
 
@@ -58,6 +65,7 @@ class UserController extends Controller
     {
         $user->fill($this->payload($request, false));
         $user->save();
+        $this->syncRoles($user, $request);
 
         return response()->json([
             'message' => '修改成功',
@@ -157,12 +165,17 @@ class UserController extends Controller
 
     private function filteredQuery(UserIndexRequest $request): Builder
     {
-        return User::query()
+        $query = User::query()
             ->when($request->filled('user_name'), fn (Builder $query) => $query->where('user_name', 'like', '%'.$request->string('user_name').'%'))
             ->when($request->filled('user_mobile'), fn (Builder $query) => $query->where('user_mobile', 'like', '%'.$request->string('user_mobile').'%'))
             ->when($request->filled('user_status'), fn (Builder $query) => $query->where('user_status', $request->integer('user_status')))
             ->when($request->filled('begin_time'), fn (Builder $query) => $query->whereDate('created_at', '>=', $request->date('begin_time')))
-            ->when($request->filled('end_time'), fn (Builder $query) => $query->whereDate('created_at', '<=', $request->date('end_time')));
+            ->when($request->filled('end_time'), fn (Builder $query) => $query->whereDate('created_at', '<=', $request->date('end_time')))
+            ->when($request->filled('dept_id') && $request->string('dept_id')->toString() !== '0', function (Builder $query) use ($request): void {
+                $query->whereIn('dept_id', HrDepartment::selfAndDescendantIds($request->string('dept_id')->toString()));
+            });
+
+        return $this->rbac->applyDataScope($query, $request->user());
     }
 
     /**
@@ -180,6 +193,7 @@ class UserController extends Controller
             'register_channel' => $request->string('register_channel', 'web')->toString(),
             'lock_reason' => $request->string('lock_reason')->toString(),
             'lock_expire_time' => $request->input('lock_expire_time'),
+            'dept_id' => $request->input('dept_id') ?: 0,
         ];
 
         if ($creating) {
@@ -192,6 +206,22 @@ class UserController extends Controller
         }
 
         return $data;
+    }
+
+    private function syncRoles(User $user, Request $request): void
+    {
+        if (! $request->exists('role_ids')) {
+            return;
+        }
+
+        $ids = array_map('strval', $request->input('role_ids', []));
+        $superId = (string) AuthRole::query()->where('role_code', AuthRole::SUPER_ADMIN_CODE)->value('id');
+
+        if ($superId !== '' && ! $this->rbac->isSuperAdmin($request->user())) {
+            $ids = array_values(array_filter($ids, fn (string $id): bool => $id !== $superId));
+        }
+
+        $user->roles()->sync($this->rbac->syncMap($ids));
     }
 
     private function guardSelf(User $user): void

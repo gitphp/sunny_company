@@ -7,6 +7,7 @@ use App\Support\Snowflake;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
@@ -59,6 +60,11 @@ class AuthMenu extends Model
     public function children(): HasMany
     {
         return $this->hasMany(self::class, 'parent_id')->orderByDesc('menu_sort');
+    }
+
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(AuthRole::class, 'auth_role_menus', 'menu_id', 'role_id');
     }
 
     public function isButton(): bool

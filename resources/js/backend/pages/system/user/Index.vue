@@ -1,5 +1,20 @@
 <template>
     <div class="app-container">
+        <div class="split-layout">
+            <aside class="split-side">
+                <el-input v-model="deptKeyword" placeholder="请输入部门名称" clearable style="margin-bottom:12px" />
+                <el-tree
+                    :data="deptTree"
+                    node-key="id"
+                    default-expand-all
+                    highlight-current
+                    :filter-node-method="filterDept"
+                    :props="{ label: 'dept_name' }"
+                    @node-click="onDeptClick"
+                    ref="deptTreeRef"
+                />
+            </aside>
+            <div class="split-main">
         <el-form :inline="true" :model="query" class="search-form" @submit.prevent="handleSearch">
             <el-form-item label="用户名称">
                 <el-input v-model="query.user_name" placeholder="请输入用户名称" clearable />
@@ -39,6 +54,12 @@
             <el-table-column label="用户编号" prop="id" min-width="170" show-overflow-tooltip />
             <el-table-column label="用户名称" prop="user_name" min-width="110" />
             <el-table-column label="真实姓名" prop="real_name" min-width="110" />
+            <el-table-column label="部门" prop="dept_name" min-width="120" />
+            <el-table-column label="角色" min-width="140">
+                <template #default="{ row }">
+                    {{ (row.roles || []).map((item) => item.role_name).join('、') || '-' }}
+                </template>
+            </el-table-column>
             <el-table-column label="手机号码" prop="user_mobile" min-width="120" />
             <el-table-column label="邮箱" prop="user_email" min-width="180" show-overflow-tooltip />
             <el-table-column label="状态" width="90" align="center">
@@ -95,13 +116,16 @@
                 <el-button type="primary" @click="submitReset">确定</el-button>
             </template>
         </el-dialog>
+            </div>
+        </div>
     </div>
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import { batchDeleteUsers, changeUserStatus, deleteUser, exportUsers, fetchUsers, resetUserPassword } from '../../../api/user';
+import { fetchOptionDepartments } from '../../../api/options';
 import { useUserStore } from '../../../stores/user';
 import UserDialog from './UserDialog.vue';
 
@@ -119,6 +143,9 @@ const loading = ref(false);
 const rows = ref([]);
 const total = ref(0);
 const selected = ref([]);
+const deptTree = ref([]);
+const deptKeyword = ref('');
+const deptTreeRef = ref();
 const single = computed(() => selected.value.length !== 1);
 const multiple = computed(() => selected.value.length === 0);
 
@@ -127,6 +154,7 @@ const query = reactive({
     user_mobile: '',
     user_status: undefined,
     daterange: [],
+    dept_id: '',
     page: 1,
     per_page: 10,
 });
@@ -148,6 +176,7 @@ function queryParams() {
         user_name: query.user_name || undefined,
         user_mobile: query.user_mobile || undefined,
         user_status: query.user_status,
+        dept_id: query.dept_id || undefined,
         begin_time,
         end_time,
         page: query.page,
@@ -176,8 +205,31 @@ function handleReset() {
     query.user_mobile = '';
     query.user_status = undefined;
     query.daterange = [];
+    query.dept_id = '';
     query.page = 1;
     loadUsers();
+}
+
+function filterDept(value, data) {
+    if (!value) {
+        return true;
+    }
+    return data.dept_name.includes(value);
+}
+
+function onDeptClick(node) {
+    query.dept_id = node.id;
+    query.page = 1;
+    loadUsers();
+}
+
+watch(deptKeyword, (value) => {
+    deptTreeRef.value?.filter(value);
+});
+
+async function loadDepartments() {
+    const { data } = await fetchOptionDepartments();
+    deptTree.value = data.departments ?? [];
 }
 
 function onSelectionChange(value) {
@@ -240,5 +292,8 @@ async function submitReset() {
     reset.visible = false;
 }
 
-onMounted(loadUsers);
+onMounted(async () => {
+    await loadDepartments();
+    loadUsers();
+});
 </script>

@@ -22,6 +22,7 @@ class UserIndexRequest extends FormRequest
             'user_status' => ['nullable', 'integer', 'in:0,1,2,3'],
             'begin_time' => ['nullable', 'date'],
             'end_time' => ['nullable', 'date', 'after_or_equal:begin_time'],
+            'dept_id' => ['nullable', 'string'],
             'page' => ['nullable', 'integer', 'min:1'],
             'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
         ];

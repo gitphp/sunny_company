@@ -8,6 +8,7 @@ export const useUserStore = defineStore('user', {
         menus: [],
         permissions: [],
         routes: [],
+        isSuper: false,
         ready: false,
     }),
     actions: {
@@ -25,6 +26,7 @@ export const useUserStore = defineStore('user', {
                 this.menus = [];
                 this.permissions = [];
                 this.routes = [];
+                this.isSuper = false;
             } finally {
                 this.ready = true;
             }
@@ -33,6 +35,7 @@ export const useUserStore = defineStore('user', {
             const { data } = await fetchMenus();
             this.menus = data.menus ?? [];
             this.permissions = data.permissions ?? [];
+            this.isSuper = Boolean(data.is_super);
             this.routes = generateRoutes(this.menus);
         },
         async login(payload) {
@@ -50,11 +53,12 @@ export const useUserStore = defineStore('user', {
                 this.menus = [];
                 this.permissions = [];
                 this.routes = [];
+                this.isSuper = false;
                 this.ready = true;
             }
         },
         hasPermission(code) {
-            if (!code) {
+            if (!code || this.isSuper) {
                 return true;
             }
 

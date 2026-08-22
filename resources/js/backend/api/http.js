@@ -1,3 +1,4 @@
+import { ElMessage } from 'element-plus';
 import axios from 'axios';
 
 const http = axios.create({
@@ -19,6 +20,9 @@ http.interceptors.response.use(
             if (!path.endsWith('/login')) {
                 window.location.href = '/admin/login';
             }
+        }
+        if (error.response?.status === 403) {
+            ElMessage.error(error.response.data?.message || '没有访问权限');
         }
         return Promise.reject(error);
     },

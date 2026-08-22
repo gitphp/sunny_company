@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
-use App\Http\Resources\UserResource;
-use App\Models\AuthMenu;
+use App\Http\Resources\Admin\UserResource;
+use App\Services\RbacService;
 use App\Services\UserAuthenticator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
+    public function __construct(private readonly RbacService $rbac) {}
+
     public function login(LoginRequest $request, UserAuthenticator $authenticator): JsonResponse
     {
         $user = $authenticator->attempt(
@@ -26,7 +28,7 @@ class AuthController extends Controller
 
         return response()->json([
             'message' => '登录成功',
-            'user' => UserResource::make($user->fresh())->resolve(),
+            'user' => UserResource::make($user->fresh()->load(['department', 'roles']))->resolve(),
         ]);
     }
 
@@ -44,48 +46,23 @@ class AuthController extends Controller
     public function user(Request $request): JsonResponse
     {
         return response()->json([
-            'user' => UserResource::make($request->user())->resolve(),
+            'user' => UserResource::make($request->user()->load(['department', 'roles']))->resolve(),
         ]);
     }
 
-    public function menus(): JsonResponse
+    public function menus(Request $request): JsonResponse
     {
-        $menus = AuthMenu::ordered();
-        $tree = AuthMenu::buildTree($menus);
+        $user = $request->user();
 
         return response()->json([
-            'menus' => $this->sidebarTree($tree),
-            'permissions' => $menus
-                ->pluck('permission_code')
-                ->filter()
-                ->values(),
+            'menus' => $this->rbac->sidebarMenus($user),
+            'permissions' => $this->rbac->permissionCodes($user)->values(),
+            'is_super' => $this->rbac->isSuperAdmin($user),
+            'roles' => $this->rbac->activeRoles($user)->map(fn ($role) => [
+                'id' => (string) $role->id,
+                'role_name' => $role->role_name,
+                'role_code' => $role->role_code,
+            ])->values(),
         ]);
-    }
-
-    /**
-     * @param  array<int, array<string, mixed>>  $tree
-     * @return array<int, array<string, mixed>>
-     */
-    private function sidebarTree(array $tree): array
-    {
-        $items = [];
-
-        foreach ($tree as $node) {
-            if (($node['menu_status'] ?? 1) !== 1) {
-                continue;
-            }
-
-            if ($node['is_button'] ?? false) {
-                continue;
-            }
-
-            if (isset($node['children'])) {
-                $node['children'] = $this->sidebarTree($node['children']);
-            }
-
-            $items[] = $node;
-        }
-
-        return $items;
     }
 }
