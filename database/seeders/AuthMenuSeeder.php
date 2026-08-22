@@ -252,6 +252,48 @@ class AuthMenuSeeder extends Seeder
             'menu_sort' => 40,
         ], $config->id);
 
+        $adPosition = $this->createMenu([
+            'menu_name' => '广告位',
+            'menu_icon' => 'PictureFilled',
+            'menu_path' => '/site/ad-position',
+            'component' => 'site/ad/position/Index',
+            'permission_code' => 'cms:ad-position:list',
+            'menu_sort' => 18,
+        ], $site->id);
+
+        foreach ([
+            ['新增', 'cms:ad-position:add', 50],
+            ['修改', 'cms:ad-position:edit', 40],
+            ['删除', 'cms:ad-position:remove', 30],
+        ] as [$name, $code, $sort]) {
+            $this->createMenu([
+                'menu_name' => $name,
+                'permission_code' => $code,
+                'menu_sort' => $sort,
+            ], $adPosition->id);
+        }
+
+        $adMaterial = $this->createMenu([
+            'menu_name' => '广告素材',
+            'menu_icon' => 'Picture',
+            'menu_path' => '/site/ad-material',
+            'component' => 'site/ad/material/Index',
+            'permission_code' => 'cms:ad-material:list',
+            'menu_sort' => 16,
+        ], $site->id);
+
+        foreach ([
+            ['新增', 'cms:ad-material:add', 50],
+            ['修改', 'cms:ad-material:edit', 40],
+            ['删除', 'cms:ad-material:remove', 30],
+        ] as [$name, $code, $sort]) {
+            $this->createMenu([
+                'menu_name' => $name,
+                'permission_code' => $code,
+                'menu_sort' => $sort,
+            ], $adMaterial->id);
+        }
+
         $link = $this->createMenu([
             'menu_name' => '友情链接',
             'menu_icon' => 'Connection',

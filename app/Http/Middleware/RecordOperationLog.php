@@ -89,6 +89,8 @@ class RecordOperationLog
             'friend-links' => 'link',
             'feedbacks' => 'feedback',
             'site-configs' => 'config',
+            'ad-positions' => 'ad_position',
+            'ad-materials' => 'ad_material',
             default => mb_substr($segment, 0, 16),
         };
     }
@@ -132,7 +134,7 @@ class RecordOperationLog
      */
     private function label(Request $request, array $body): string
     {
-        foreach (['title', 'user_name', 'role_name', 'dept_name', 'post_name', 'link_name', 'cat_name', 'fb_title', 'menu_name'] as $field) {
+        foreach (['title', 'user_name', 'role_name', 'dept_name', 'post_name', 'link_name', 'cat_name', 'fb_title', 'menu_name', 'pos_name'] as $field) {
             $value = $request->input($field);
 
             if (is_string($value) && $value !== '') {

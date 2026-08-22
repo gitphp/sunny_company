@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Enums\DataScope;
 use App\Enums\PermissionType;
 use App\Enums\RoleType;
+use App\Models\AdMaterial;
+use App\Models\AdPosition;
 use App\Models\Article;
 use App\Models\ArticleCategory;
 use App\Models\AuthMenu;
@@ -28,6 +30,7 @@ class RbacSeeder extends Seeder
         $this->seedArticleCategories();
         $this->seedSiteConfigs();
         $this->seedFriendLinks();
+        $this->seedAdPositions();
         $this->syncPermissionsFromMenus();
         $super = $this->seedSuperAdminRole();
         $this->assignAdmin($root, $super);
@@ -154,6 +157,32 @@ class RbacSeeder extends Seeder
             ['新增', 'cms:article:add', 50],
             ['修改', 'cms:article:edit', 40],
             ['删除', 'cms:article:remove', 30],
+        ]);
+
+        $this->ensureChildMenu($site, [
+            'menu_name' => '广告位',
+            'menu_icon' => 'PictureFilled',
+            'menu_path' => '/site/ad-position',
+            'component' => 'site/ad/position/Index',
+            'permission_code' => 'cms:ad-position:list',
+            'menu_sort' => 18,
+        ], [
+            ['新增', 'cms:ad-position:add', 50],
+            ['修改', 'cms:ad-position:edit', 40],
+            ['删除', 'cms:ad-position:remove', 30],
+        ]);
+
+        $this->ensureChildMenu($site, [
+            'menu_name' => '广告素材',
+            'menu_icon' => 'Picture',
+            'menu_path' => '/site/ad-material',
+            'component' => 'site/ad/material/Index',
+            'permission_code' => 'cms:ad-material:list',
+            'menu_sort' => 16,
+        ], [
+            ['新增', 'cms:ad-material:add', 50],
+            ['修改', 'cms:ad-material:edit', 40],
+            ['删除', 'cms:ad-material:remove', 30],
         ]);
 
         $this->ensureChildMenu($site, [
@@ -420,6 +449,44 @@ class RbacSeeder extends Seeder
                 'link_status' => 1,
             ]);
         }
+    }
+
+    private function seedAdPositions(): void
+    {
+        if (AdPosition::query()->exists()) {
+            return;
+        }
+
+        $banner = AdPosition::query()->create([
+            'id' => Snowflake::id(),
+            'pos_name' => '首页顶部轮播图',
+            'pos_code' => 'home_top_banner',
+            'pos_desc' => '官网首页顶部轮播',
+            'ad_width' => 1920,
+            'ad_height' => 600,
+            'status' => 1,
+        ]);
+
+        AdPosition::query()->create([
+            'id' => Snowflake::id(),
+            'pos_name' => '首页侧边广告',
+            'pos_code' => 'home_side_ad',
+            'pos_desc' => '官网首页侧栏',
+            'ad_width' => 300,
+            'ad_height' => 250,
+            'status' => 1,
+        ]);
+
+        AdMaterial::query()->create([
+            'id' => Snowflake::id(),
+            'position_id' => $banner->id,
+            'title' => '阳光管理系统上线',
+            'image_url' => '',
+            'link_url' => '/admin',
+            'target' => '_self',
+            'sort_order' => 10,
+            'status' => 1,
+        ]);
     }
 
     private function syncPermissionsFromMenus(): void

@@ -30,4 +30,9 @@ class OptionController extends Controller
     {
         return response()->json($this->options->articleCategories($request->validated()));
     }
+
+    public function adPositions(OptionRequest $request): JsonResponse
+    {
+        return response()->json($this->options->adPositions());
+    }
 }

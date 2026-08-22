@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\AdController;
+use App\Http\Controllers\Admin\AdMaterialController;
+use App\Http\Controllers\Admin\AdPositionController;
 use App\Http\Controllers\Admin\ArticleCategoryController;
 use App\Http\Controllers\Admin\ArticleController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
@@ -19,6 +22,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('api')->group(function () {
     Route::post('/feedbacks', [PublicFeedbackController::class, 'store'])->middleware('throttle:8,1');
+    Route::get('/ads/{code}', [AdController::class, 'show']);
 
     Route::prefix('admin')->group(function () {
         Route::post('/login', [AdminAuthController::class, 'login'])->middleware('throttle:10,1');
@@ -32,6 +36,7 @@ Route::prefix('api')->group(function () {
             Route::get('/options/departments', [OptionController::class, 'departments']);
             Route::get('/options/posts', [OptionController::class, 'posts']);
             Route::get('/options/article-categories', [OptionController::class, 'articleCategories']);
+            Route::get('/options/ad-positions', [OptionController::class, 'adPositions']);
             Route::get('/options/menus', [MenuController::class, 'index']);
 
             Route::get('/users/export', [UserController::class, 'export'])->middleware('permission:system:user:export');
@@ -79,6 +84,18 @@ Route::prefix('api')->group(function () {
 
             Route::get('/site-configs', [SiteConfigController::class, 'index'])->middleware('permission:cms:config:list');
             Route::put('/site-configs', [SiteConfigController::class, 'update'])->middleware('permission:cms:config:edit');
+
+            Route::get('/ad-positions', [AdPositionController::class, 'index'])->middleware('permission:cms:ad-position:list');
+            Route::post('/ad-positions', [AdPositionController::class, 'store'])->middleware('permission:cms:ad-position:add');
+            Route::put('/ad-positions/{position}/status', [AdPositionController::class, 'changeStatus'])->middleware('permission:cms:ad-position:edit');
+            Route::put('/ad-positions/{position}', [AdPositionController::class, 'update'])->middleware('permission:cms:ad-position:edit');
+            Route::delete('/ad-positions/{position}', [AdPositionController::class, 'destroy'])->middleware('permission:cms:ad-position:remove');
+
+            Route::get('/ad-materials', [AdMaterialController::class, 'index'])->middleware('permission:cms:ad-material:list');
+            Route::post('/ad-materials', [AdMaterialController::class, 'store'])->middleware('permission:cms:ad-material:add');
+            Route::put('/ad-materials/{material}/status', [AdMaterialController::class, 'changeStatus'])->middleware('permission:cms:ad-material:edit');
+            Route::put('/ad-materials/{material}', [AdMaterialController::class, 'update'])->middleware('permission:cms:ad-material:edit');
+            Route::delete('/ad-materials/{material}', [AdMaterialController::class, 'destroy'])->middleware('permission:cms:ad-material:remove');
 
             Route::get('/friend-links', [FriendLinkController::class, 'index'])->middleware('permission:cms:link:list');
             Route::post('/friend-links', [FriendLinkController::class, 'store'])->middleware('permission:cms:link:add');

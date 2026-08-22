@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\AdPosition;
 use App\Models\ArticleCategory;
 use App\Models\AuthRole;
 use App\Models\HrDepartment;
@@ -70,6 +71,27 @@ class OptionService
 
         return [
             'categories' => ArticleCategory::buildTree($query->get()),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function adPositions(): array
+    {
+        $positions = AdPosition::query()
+            ->where('status', 1)
+            ->orderByDesc('id')
+            ->get(['id', 'pos_name', 'pos_code', 'ad_width', 'ad_height']);
+
+        return [
+            'positions' => $positions->map(fn (AdPosition $position) => [
+                'id' => (string) $position->id,
+                'pos_name' => $position->pos_name,
+                'pos_code' => $position->pos_code,
+                'ad_width' => (int) $position->ad_width,
+                'ad_height' => (int) $position->ad_height,
+            ])->values(),
         ];
     }
 }

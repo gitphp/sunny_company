@@ -23,3 +23,7 @@ export function fetchOptionPosts() {
 export function fetchOptionArticleCategories(params) {
     return http.get('/options/article-categories', { params });
 }
+
+export function fetchOptionAdPositions() {
+    return http.get('/options/ad-positions');
+}
