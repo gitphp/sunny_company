@@ -123,4 +123,8 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'snowflake_datacenter_id' => (int) env('SNOWFLAKE_DATACENTER_ID', 1),
+
+    'snowflake_worker_id' => (int) env('SNOWFLAKE_WORKER_ID', 1),
+
 ];

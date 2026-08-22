@@ -4,8 +4,16 @@
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
+@source '../**/*.vue';
 
 @theme {
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+    --color-sand: #f6efe3;
+    --color-sand-dark: #eadfcb;
+    --color-ink: #1f2a24;
+    --color-ink-soft: #4c5b53;
+    --color-sun: #e08a1e;
+    --color-sun-deep: #c46d10;
+    --color-leaf: #2f6f57;
 }

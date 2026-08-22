@@ -2,44 +2,56 @@
 
 namespace Database\Factories;
 
+use App\Enums\RealAuthStatus;
+use App\Enums\UserStatus;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 /**
  * @extends Factory<User>
  */
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
     protected static ?string $password;
 
     /**
-     * Define the model's default state.
-     *
      * @return array<string, mixed>
      */
     public function definition(): array
     {
         return [
-            'name' => fake()->name(),
-            'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
-            'remember_token' => Str::random(10),
+            'user_name' => fake()->unique()->userName(),
+            'real_name' => fake()->name(),
+            'user_mobile' => fake()->unique()->numerify('1##########'),
+            'user_email' => fake()->unique()->safeEmail(),
+            'password_hash' => static::$password ??= 'password',
+            'password_salt' => '',
+            'user_status' => UserStatus::Normal,
+            'lock_reason' => '',
+            'lock_expire_time' => null,
+            'last_login_ip' => '',
+            'last_login_region' => '',
+            'last_login_at' => null,
+            'register_ip' => fake()->ipv4(),
+            'register_device' => 'factory',
+            'register_channel' => 'web',
+            'real_auth_status' => RealAuthStatus::Unverified,
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
-    public function unverified(): static
+    public function disabled(): static
     {
         return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
+            'user_status' => UserStatus::Disabled,
+        ]);
+    }
+
+    public function frozen(?string $reason = '风控冻结'): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'user_status' => UserStatus::Frozen,
+            'lock_reason' => $reason ?? '',
+            'lock_expire_time' => now()->addDays(7),
         ]);
     }
 }
