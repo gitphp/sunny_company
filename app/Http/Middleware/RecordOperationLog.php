@@ -38,7 +38,7 @@ class RecordOperationLog
 
         $path = $request->path();
 
-        if (str_contains($path, 'operation-logs') || str_ends_with($path, '/logout') || str_contains($path, '/options/')) {
+        if (str_contains($path, 'operation-logs') || str_ends_with($path, '/logout') || str_contains($path, '/options/') || str_contains($path, '/ai/chat')) {
             return false;
         }
 
@@ -92,6 +92,7 @@ class RecordOperationLog
             'ad-positions' => 'ad_position',
             'ad-materials' => 'ad_material',
             'jobs' => 'job',
+            'ai' => 'ai',
             default => mb_substr($segment, 0, 16),
         };
     }
@@ -135,7 +136,7 @@ class RecordOperationLog
      */
     private function label(Request $request, array $body): string
     {
-        foreach (['title', 'job_title', 'user_name', 'role_name', 'dept_name', 'post_name', 'link_name', 'cat_name', 'fb_title', 'menu_name', 'pos_name'] as $field) {
+        foreach (['title', 'job_title', 'provider_name', 'user_name', 'role_name', 'dept_name', 'post_name', 'link_name', 'cat_name', 'fb_title', 'menu_name', 'pos_name'] as $field) {
             $value = $request->input($field);
 
             if (is_string($value) && $value !== '') {
@@ -170,7 +171,7 @@ class RecordOperationLog
      */
     private function redact(array $data): array
     {
-        foreach (['password', 'password_hash', 'password_confirmation'] as $key) {
+        foreach (['password', 'password_hash', 'password_confirmation', 'api_key'] as $key) {
             unset($data[$key]);
         }
 

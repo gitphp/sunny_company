@@ -3,9 +3,12 @@
 use App\Http\Controllers\AdController;
 use App\Http\Controllers\Admin\AdMaterialController;
 use App\Http\Controllers\Admin\AdPositionController;
+use App\Http\Controllers\Admin\AiController;
+use App\Http\Controllers\Admin\AiProviderController;
 use App\Http\Controllers\Admin\ArticleCategoryController;
 use App\Http\Controllers\Admin\ArticleController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\FeedbackController;
 use App\Http\Controllers\Admin\FriendLinkController;
@@ -35,6 +38,17 @@ Route::prefix('api')->group(function () {
             Route::post('/logout', [AdminAuthController::class, 'logout']);
             Route::get('/user', [AdminAuthController::class, 'user']);
             Route::get('/menus', [AdminAuthController::class, 'menus']);
+            Route::get('/dashboard', [DashboardController::class, 'index']);
+
+            Route::get('/ai/providers/options', [AiProviderController::class, 'options'])->middleware('permission:ai:chat');
+            Route::get('/ai/providers', [AiProviderController::class, 'index'])->middleware('permission:ai:config');
+            Route::post('/ai/providers', [AiProviderController::class, 'store'])->middleware('permission:ai:config');
+            Route::put('/ai/providers/{provider}/status', [AiProviderController::class, 'changeStatus'])->middleware('permission:ai:config');
+            Route::put('/ai/providers/{provider}/default', [AiProviderController::class, 'setDefault'])->middleware('permission:ai:config');
+            Route::post('/ai/providers/{provider}/test', [AiProviderController::class, 'test'])->middleware('permission:ai:config');
+            Route::put('/ai/providers/{provider}', [AiProviderController::class, 'update'])->middleware('permission:ai:config');
+            Route::delete('/ai/providers/{provider}', [AiProviderController::class, 'destroy'])->middleware('permission:ai:config');
+            Route::post('/ai/chat', [AiController::class, 'chat'])->middleware(['permission:ai:chat', 'throttle:30,1']);
 
             Route::get('/options/roles', [OptionController::class, 'roles']);
             Route::get('/options/departments', [OptionController::class, 'departments']);

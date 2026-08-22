@@ -8,6 +8,7 @@ use App\Enums\PermissionType;
 use App\Enums\RoleType;
 use App\Models\AdMaterial;
 use App\Models\AdPosition;
+use App\Models\AiProvider;
 use App\Models\Article;
 use App\Models\ArticleCategory;
 use App\Models\AuthMenu;
@@ -34,6 +35,7 @@ class RbacSeeder extends Seeder
         $this->seedFriendLinks();
         $this->seedAdPositions();
         $this->seedBossJobs();
+        $this->seedAiProviders();
         $this->syncPermissionsFromMenus();
         $super = $this->seedSuperAdminRole();
         $this->assignAdmin($root, $super);
@@ -64,6 +66,10 @@ class RbacSeeder extends Seeder
 
         $this->updateMenu('/system/log/operlog', 'system/log/operlog/Index', 'system:operlog:list', [
             ['删除', 'system:operlog:remove', 30],
+        ]);
+
+        $this->updateMenu('/ai', 'ai/Index', 'ai:chat', [
+            ['模型配置', 'ai:config', 40],
         ]);
 
         $this->ensureCmsMenus();
@@ -557,6 +563,50 @@ class RbacSeeder extends Seeder
         ] as $item) {
             BossJob::query()->create([
                 'id' => Snowflake::id(),
+                ...$item,
+            ]);
+        }
+    }
+
+    private function seedAiProviders(): void
+    {
+        if (AiProvider::query()->exists()) {
+            return;
+        }
+
+        foreach ([
+            [
+                'provider_name' => 'DeepSeek',
+                'base_url' => 'https://api.deepseek.com',
+                'model' => 'deepseek-chat',
+                'system_prompt' => '你是名杨科技管理系统的智能助手，回答简洁、准确。',
+                'is_default' => 1,
+                'sort_order' => 30,
+            ],
+            [
+                'provider_name' => 'OpenAI',
+                'base_url' => 'https://api.openai.com/v1',
+                'model' => 'gpt-4o-mini',
+                'system_prompt' => '',
+                'is_default' => 0,
+                'sort_order' => 20,
+            ],
+            [
+                'provider_name' => '通义千问',
+                'base_url' => 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+                'model' => 'qwen-plus',
+                'system_prompt' => '',
+                'is_default' => 0,
+                'sort_order' => 10,
+            ],
+        ] as $item) {
+            AiProvider::query()->create([
+                'id' => Snowflake::id(),
+                'driver' => 'openai',
+                'api_key' => '',
+                'temperature' => 0.7,
+                'max_tokens' => 2048,
+                'status' => 1,
                 ...$item,
             ]);
         }

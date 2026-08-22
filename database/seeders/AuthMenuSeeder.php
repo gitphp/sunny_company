@@ -22,13 +22,20 @@ class AuthMenuSeeder extends Seeder
             'menu_sort' => 990,
         ]);
 
-        $this->createMenu([
+        $ai = $this->createMenu([
             'menu_name' => 'AI对话',
             'menu_icon' => 'ChatDotRound',
             'menu_path' => '/ai',
             'component' => 'ai/Index',
+            'permission_code' => 'ai:chat',
             'menu_sort' => 980,
         ]);
+
+        $this->createMenu([
+            'menu_name' => '模型配置',
+            'permission_code' => 'ai:config',
+            'menu_sort' => 40,
+        ], $ai->id);
 
         $system = $this->createMenu([
             'menu_name' => '系统管理',
