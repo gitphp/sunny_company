@@ -41,6 +41,19 @@
                     </el-form-item>
                 </el-col>
                 <el-col :span="12">
+                    <el-form-item label="岗位">
+                        <el-tree-select
+                            v-model="form.post_id"
+                            :data="postTree"
+                            check-strictly
+                            node-key="id"
+                            :props="{ label: 'post_name' }"
+                            clearable
+                            style="width:100%"
+                        />
+                    </el-form-item>
+                </el-col>
+                <el-col :span="12">
                     <el-form-item label="角色">
                         <el-select v-model="form.role_ids" multiple collapse-tags style="width:100%">
                             <el-option v-for="role in roles" :key="role.id" :label="role.role_name" :value="role.id" />
@@ -90,7 +103,7 @@
 import { reactive, ref, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import { createUser, updateUser } from '../../../api/user';
-import { fetchOptionDepartments, fetchOptionRoles } from '../../../api/options';
+import { fetchOptionDepartments, fetchOptionPosts, fetchOptionRoles } from '../../../api/options';
 
 const props = defineProps({
     modelValue: Boolean,
@@ -103,6 +116,7 @@ const saving = ref(false);
 const form = reactive(emptyForm());
 const roles = ref([]);
 const deptTree = ref([]);
+const postTree = ref([]);
 
 const rules = {
     user_name: [{ required: true, message: '请输入用户名称', trigger: 'blur' }],
@@ -127,9 +141,14 @@ watch(
     () => [props.modelValue, props.user],
     async () => {
         if (props.modelValue) {
-            const [roleRes, deptRes] = await Promise.all([fetchOptionRoles(), fetchOptionDepartments()]);
+            const [roleRes, deptRes, postRes] = await Promise.all([
+                fetchOptionRoles(),
+                fetchOptionDepartments(),
+                fetchOptionPosts(),
+            ]);
             roles.value = roleRes.data.roles ?? [];
             deptTree.value = deptRes.data.departments ?? [];
+            postTree.value = postRes.data.posts ?? [];
         }
         Object.assign(form, props.user ? {
             id: props.user.id,
@@ -143,6 +162,7 @@ watch(
             register_channel: props.user.register_channel || 'web',
             lock_reason: props.user.lock_reason || '',
             dept_id: props.user.dept_id && props.user.dept_id !== '0' ? props.user.dept_id : '',
+            post_id: props.user.post_id && props.user.post_id !== '0' ? props.user.post_id : '',
             role_ids: props.user.role_ids || [],
         } : emptyForm());
     },
@@ -161,6 +181,7 @@ function emptyForm() {
         register_channel: 'web',
         lock_reason: '',
         dept_id: '',
+        post_id: '',
         role_ids: [],
     };
 }

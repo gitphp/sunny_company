@@ -81,6 +81,12 @@ class PostService
             ]);
         }
 
+        if ($post->users()->exists()) {
+            throw ValidationException::withMessages([
+                'id' => ['该岗位仍有用户，无法删除'],
+            ]);
+        }
+
         $post->delete();
 
         return ['message' => '删除成功'];

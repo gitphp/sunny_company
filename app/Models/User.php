@@ -33,6 +33,7 @@ use Illuminate\Notifications\Notifiable;
     'register_channel',
     'real_auth_status',
     'dept_id',
+    'post_id',
 ])]
 #[Hidden(['password_hash', 'password_salt'])]
 class User extends Authenticatable
@@ -127,6 +128,11 @@ class User extends Authenticatable
     public function department(): BelongsTo
     {
         return $this->belongsTo(HrDepartment::class, 'dept_id');
+    }
+
+    public function post(): BelongsTo
+    {
+        return $this->belongsTo(HrPost::class, 'post_id');
     }
 
     public function roles(): BelongsToMany

@@ -8,10 +8,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
+use Throwable;
 
 class AuthService
 {
-    public function __construct(private readonly RbacService $rbac) {}
+    public function __construct(
+        private readonly RbacService $rbac,
+        private readonly OperationLogService $logs,
+    ) {}
 
     /**
      * @param  array<string, mixed>  $data
@@ -19,7 +23,13 @@ class AuthService
      */
     public function login(array $data, Request $request): array
     {
-        $user = $this->attempt((string) $data['account'], (string) $data['password']);
+        try {
+            $user = $this->attempt((string) $data['account'], (string) $data['password']);
+        } catch (ValidationException $exception) {
+            $error = (string) collect($exception->errors())->flatten()->first();
+            $this->writeAuthLog($request, 'LOGIN', 0, null, (string) $data['account'], $error);
+            throw $exception;
+        }
 
         Auth::login($user);
         $request->session()->regenerate();
@@ -29,9 +39,11 @@ class AuthService
             'last_login_at' => now(),
         ])->save();
 
+        $this->writeAuthLog($request, 'LOGIN', 1, $user, (string) $user->user_name);
+
         return [
             'message' => '登录成功',
-            'user' => UserResource::make($user->fresh()->load(['department', 'roles']))->resolve(),
+            'user' => UserResource::make($user->fresh()->load(['department', 'post', 'roles']))->resolve(),
         ];
     }
 
@@ -40,6 +52,9 @@ class AuthService
      */
     public function logout(Request $request): array
     {
+        $user = $request->user();
+        $this->writeAuthLog($request, 'LOGOUT', 1, $user, (string) ($user?->user_name ?? ''), '', 'logout');
+
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -53,7 +68,7 @@ class AuthService
     public function current(User $user): array
     {
         return [
-            'user' => UserResource::make($user->load(['department', 'roles']))->resolve(),
+            'user' => UserResource::make($user->load(['department', 'post', 'roles']))->resolve(),
         ];
     }
 
@@ -97,5 +112,35 @@ class AuthService
         }
 
         return $user;
+    }
+
+    private function writeAuthLog(
+        Request $request,
+        string $action,
+        int $status,
+        ?User $user,
+        string $label,
+        string $error = '',
+        string $activity = 'login',
+    ): void {
+        try {
+            $this->logs->write([
+                'operator_id' => $user?->id ?? 0,
+                'operator_name' => (string) ($user?->real_name ?: $user?->user_name ?: $label),
+                'biz_type' => 'auth',
+                'activity_type' => $activity,
+                'action' => $action,
+                'biz_id' => $user?->id ?? 0,
+                'biz_label' => $label,
+                'operator_status' => $status,
+                'error_msg' => $error,
+                'client_ip' => (string) $request->ip(),
+                'user_agent' => (string) $request->userAgent(),
+                'request_url' => mb_substr($request->fullUrl(), 0, 255),
+                'method_fun' => (string) ($request->route()?->getActionName() ?? ''),
+            ]);
+        } catch (Throwable) {
+            //
+        }
     }
 }

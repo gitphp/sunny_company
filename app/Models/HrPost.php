@@ -58,6 +58,11 @@ class HrPost extends Model
         return $this->hasMany(self::class, 'parent_id')->orderByDesc('post_sort');
     }
 
+    public function users(): HasMany
+    {
+        return $this->hasMany(User::class, 'post_id');
+    }
+
     /**
      * @return Collection<int, HrPost>
      */

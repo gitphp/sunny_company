@@ -37,6 +37,7 @@ class UserFactory extends Factory
             'register_channel' => 'web',
             'real_auth_status' => RealAuthStatus::Unverified,
             'dept_id' => 0,
+            'post_id' => 0,
         ];
     }
 

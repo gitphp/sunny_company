@@ -55,6 +55,7 @@
             <el-table-column label="用户名称" prop="user_name" min-width="110" />
             <el-table-column label="真实姓名" prop="real_name" min-width="110" />
             <el-table-column label="部门" prop="dept_name" min-width="120" />
+            <el-table-column label="岗位" prop="post_name" min-width="120" />
             <el-table-column label="角色" min-width="140">
                 <template #default="{ row }">
                     {{ (row.roles || []).map((item) => item.role_name).join('、') || '-' }}

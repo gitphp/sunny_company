@@ -107,6 +107,7 @@ class UserRequest extends SceneRequest
             'lock_reason' => ['nullable', 'string', 'max:255'],
             'lock_expire_time' => ['nullable', 'date'],
             'dept_id' => ['nullable', 'string'],
+            'post_id' => ['nullable', 'string'],
             'role_ids' => ['nullable', 'array'],
             'role_ids.*' => ['string'],
         ];
@@ -123,6 +124,7 @@ class UserRequest extends SceneRequest
             'user_mobile' => '手机号码',
             'user_email' => '邮箱',
             'password' => '密码',
+            'post_id' => '岗位',
         ];
     }
 }

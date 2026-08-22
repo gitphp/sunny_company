@@ -132,7 +132,8 @@ class AuthMenuSeeder extends Seeder
         $this->createMenu([
             'menu_name' => '操作日志',
             'menu_path' => '/system/log/operlog',
-            'component' => 'placeholder/Index',
+            'component' => 'system/log/operlog/Index',
+            'permission_code' => 'system:operlog:list',
             'menu_sort' => 20,
         ], $log->id);
 
@@ -234,6 +235,62 @@ class AuthMenuSeeder extends Seeder
                 'permission_code' => $code,
                 'menu_sort' => $sort,
             ], $article->id);
+        }
+
+        $config = $this->createMenu([
+            'menu_name' => '网站配置',
+            'menu_icon' => 'Setting',
+            'menu_path' => '/site/config',
+            'component' => 'site/config/Index',
+            'permission_code' => 'cms:config:list',
+            'menu_sort' => 40,
+        ], $site->id);
+
+        $this->createMenu([
+            'menu_name' => '修改',
+            'permission_code' => 'cms:config:edit',
+            'menu_sort' => 40,
+        ], $config->id);
+
+        $link = $this->createMenu([
+            'menu_name' => '友情链接',
+            'menu_icon' => 'Connection',
+            'menu_path' => '/site/link',
+            'component' => 'site/link/Index',
+            'permission_code' => 'cms:link:list',
+            'menu_sort' => 8,
+        ], $site->id);
+
+        foreach ([
+            ['新增', 'cms:link:add', 50],
+            ['修改', 'cms:link:edit', 40],
+            ['删除', 'cms:link:remove', 30],
+        ] as [$name, $code, $sort]) {
+            $this->createMenu([
+                'menu_name' => $name,
+                'permission_code' => $code,
+                'menu_sort' => $sort,
+            ], $link->id);
+        }
+
+        $feedback = $this->createMenu([
+            'menu_name' => '留言反馈',
+            'menu_icon' => 'ChatLineSquare',
+            'menu_path' => '/site/feedback',
+            'component' => 'site/feedback/Index',
+            'permission_code' => 'cms:feedback:list',
+            'menu_sort' => 5,
+        ], $site->id);
+
+        foreach ([
+            ['回复', 'cms:feedback:reply', 40],
+            ['删除', 'cms:feedback:remove', 30],
+        ] as [$name, $code, $sort]) {
+            $this->createMenu([
+                'menu_name' => $name,
+                'permission_code' => $code,
+                'menu_sort' => $sort,
+            ], $feedback->id);
         }
 
         unset($home);

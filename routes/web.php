@@ -4,19 +4,26 @@ use App\Http\Controllers\Admin\ArticleCategoryController;
 use App\Http\Controllers\Admin\ArticleController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\DepartmentController;
+use App\Http\Controllers\Admin\FeedbackController;
+use App\Http\Controllers\Admin\FriendLinkController;
 use App\Http\Controllers\Admin\MenuController;
+use App\Http\Controllers\Admin\OperationLogController;
 use App\Http\Controllers\Admin\OptionController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\PostController;
 use App\Http\Controllers\Admin\RoleController;
+use App\Http\Controllers\Admin\SiteConfigController;
 use App\Http\Controllers\Admin\UserController;
+use App\Http\Controllers\FeedbackController as PublicFeedbackController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('api')->group(function () {
+    Route::post('/feedbacks', [PublicFeedbackController::class, 'store'])->middleware('throttle:8,1');
+
     Route::prefix('admin')->group(function () {
         Route::post('/login', [AdminAuthController::class, 'login'])->middleware('throttle:10,1');
 
-        Route::middleware('auth')->group(function () {
+        Route::middleware(['auth', 'operlog'])->group(function () {
             Route::post('/logout', [AdminAuthController::class, 'logout']);
             Route::get('/user', [AdminAuthController::class, 'user']);
             Route::get('/menus', [AdminAuthController::class, 'menus']);
@@ -69,6 +76,27 @@ Route::prefix('api')->group(function () {
 
             Route::get('/system/menus', [MenuController::class, 'index'])->middleware('permission:system:menu:list');
             Route::get('/permissions', [PermissionController::class, 'index']);
+
+            Route::get('/site-configs', [SiteConfigController::class, 'index'])->middleware('permission:cms:config:list');
+            Route::put('/site-configs', [SiteConfigController::class, 'update'])->middleware('permission:cms:config:edit');
+
+            Route::get('/friend-links', [FriendLinkController::class, 'index'])->middleware('permission:cms:link:list');
+            Route::post('/friend-links', [FriendLinkController::class, 'store'])->middleware('permission:cms:link:add');
+            Route::put('/friend-links/{link}/status', [FriendLinkController::class, 'changeStatus'])->middleware('permission:cms:link:edit');
+            Route::put('/friend-links/{link}', [FriendLinkController::class, 'update'])->middleware('permission:cms:link:edit');
+            Route::delete('/friend-links/{link}', [FriendLinkController::class, 'destroy'])->middleware('permission:cms:link:remove');
+
+            Route::post('/feedbacks/batch-delete', [FeedbackController::class, 'batchDestroy'])->middleware('permission:cms:feedback:remove');
+            Route::put('/feedbacks/{feedback}/reply', [FeedbackController::class, 'reply'])->middleware('permission:cms:feedback:reply');
+            Route::put('/feedbacks/{feedback}/status', [FeedbackController::class, 'changeStatus'])->middleware('permission:cms:feedback:reply');
+            Route::get('/feedbacks', [FeedbackController::class, 'index'])->middleware('permission:cms:feedback:list');
+            Route::get('/feedbacks/{feedback}', [FeedbackController::class, 'show'])->middleware('permission:cms:feedback:list');
+            Route::delete('/feedbacks/{feedback}', [FeedbackController::class, 'destroy'])->middleware('permission:cms:feedback:remove');
+
+            Route::post('/operation-logs/batch-delete', [OperationLogController::class, 'batchDestroy'])->middleware('permission:system:operlog:remove');
+            Route::get('/operation-logs', [OperationLogController::class, 'index'])->middleware('permission:system:operlog:list');
+            Route::get('/operation-logs/{log}', [OperationLogController::class, 'show'])->middleware('permission:system:operlog:list');
+            Route::delete('/operation-logs/{log}', [OperationLogController::class, 'destroy'])->middleware('permission:system:operlog:remove');
         });
     });
 });

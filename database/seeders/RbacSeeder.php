@@ -10,8 +10,10 @@ use App\Models\ArticleCategory;
 use App\Models\AuthMenu;
 use App\Models\AuthPermission;
 use App\Models\AuthRole;
+use App\Models\FriendLink;
 use App\Models\HrDepartment;
 use App\Models\HrPost;
+use App\Models\SiteConfig;
 use App\Models\User;
 use App\Support\Snowflake;
 use Illuminate\Database\Seeder;
@@ -24,6 +26,8 @@ class RbacSeeder extends Seeder
         $root = $this->seedDepartments();
         $this->seedPosts();
         $this->seedArticleCategories();
+        $this->seedSiteConfigs();
+        $this->seedFriendLinks();
         $this->syncPermissionsFromMenus();
         $super = $this->seedSuperAdminRole();
         $this->assignAdmin($root, $super);
@@ -50,6 +54,10 @@ class RbacSeeder extends Seeder
             ['新增', 'system:post:add', 50],
             ['修改', 'system:post:edit', 40],
             ['删除', 'system:post:remove', 30],
+        ]);
+
+        $this->updateMenu('/system/log/operlog', 'system/log/operlog/Index', 'system:operlog:list', [
+            ['删除', 'system:operlog:remove', 30],
         ]);
 
         $this->ensureCmsMenus();
@@ -112,6 +120,17 @@ class RbacSeeder extends Seeder
         }
 
         $this->ensureChildMenu($site, [
+            'menu_name' => '网站配置',
+            'menu_icon' => 'Setting',
+            'menu_path' => '/site/config',
+            'component' => 'site/config/Index',
+            'permission_code' => 'cms:config:list',
+            'menu_sort' => 40,
+        ], [
+            ['修改', 'cms:config:edit', 40],
+        ]);
+
+        $this->ensureChildMenu($site, [
             'menu_name' => '文章分类',
             'menu_icon' => 'FolderOpened',
             'menu_path' => '/site/category',
@@ -135,6 +154,31 @@ class RbacSeeder extends Seeder
             ['新增', 'cms:article:add', 50],
             ['修改', 'cms:article:edit', 40],
             ['删除', 'cms:article:remove', 30],
+        ]);
+
+        $this->ensureChildMenu($site, [
+            'menu_name' => '友情链接',
+            'menu_icon' => 'Connection',
+            'menu_path' => '/site/link',
+            'component' => 'site/link/Index',
+            'permission_code' => 'cms:link:list',
+            'menu_sort' => 8,
+        ], [
+            ['新增', 'cms:link:add', 50],
+            ['修改', 'cms:link:edit', 40],
+            ['删除', 'cms:link:remove', 30],
+        ]);
+
+        $this->ensureChildMenu($site, [
+            'menu_name' => '留言反馈',
+            'menu_icon' => 'ChatLineSquare',
+            'menu_path' => '/site/feedback',
+            'component' => 'site/feedback/Index',
+            'permission_code' => 'cms:feedback:list',
+            'menu_sort' => 5,
+        ], [
+            ['回复', 'cms:feedback:reply', 40],
+            ['删除', 'cms:feedback:remove', 30],
         ]);
     }
 
@@ -320,6 +364,64 @@ class RbacSeeder extends Seeder
         ]);
     }
 
+    private function seedSiteConfigs(): void
+    {
+        foreach ($this->defaultSiteConfigs() as $item) {
+            SiteConfig::query()->firstOrCreate(
+                ['conf_key' => $item['conf_key']],
+                [
+                    'id' => Snowflake::id(),
+                    ...$item,
+                ]
+            );
+        }
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    private function defaultSiteConfigs(): array
+    {
+        return [
+            ['conf_group' => 'basic', 'conf_key' => 'site_name', 'conf_value' => '阳光科技', 'conf_desc' => '网站名称', 'input_type' => 'text', 'conf_sort' => 90],
+            ['conf_group' => 'basic', 'conf_key' => 'site_logo', 'conf_value' => '', 'conf_desc' => '网站Logo', 'input_type' => 'image', 'conf_sort' => 80],
+            ['conf_group' => 'basic', 'conf_key' => 'site_icp', 'conf_value' => '', 'conf_desc' => '备案号', 'input_type' => 'text', 'conf_sort' => 70],
+            ['conf_group' => 'basic', 'conf_key' => 'site_copyright', 'conf_value' => 'Copyright © 阳光科技', 'conf_desc' => '版权信息', 'input_type' => 'textarea', 'conf_sort' => 60],
+            ['conf_group' => 'seo', 'conf_key' => 'seo_title', 'conf_value' => '阳光科技', 'conf_desc' => 'SEO标题', 'input_type' => 'text', 'conf_sort' => 90],
+            ['conf_group' => 'seo', 'conf_key' => 'seo_keywords', 'conf_value' => '阳光科技,企业管理', 'conf_desc' => 'SEO关键词', 'input_type' => 'text', 'conf_sort' => 80],
+            ['conf_group' => 'seo', 'conf_key' => 'seo_description', 'conf_value' => '阳光科技官方网站', 'conf_desc' => 'SEO描述', 'input_type' => 'textarea', 'conf_sort' => 70],
+            ['conf_group' => 'contact', 'conf_key' => 'contact_name', 'conf_value' => '', 'conf_desc' => '联系人', 'input_type' => 'text', 'conf_sort' => 90],
+            ['conf_group' => 'contact', 'conf_key' => 'contact_phone', 'conf_value' => '', 'conf_desc' => '联系电话', 'input_type' => 'text', 'conf_sort' => 80],
+            ['conf_group' => 'contact', 'conf_key' => 'contact_email', 'conf_value' => '', 'conf_desc' => '联系邮箱', 'input_type' => 'text', 'conf_sort' => 70],
+            ['conf_group' => 'contact', 'conf_key' => 'contact_address', 'conf_value' => '', 'conf_desc' => '公司地址', 'input_type' => 'textarea', 'conf_sort' => 60],
+            ['conf_group' => 'social', 'conf_key' => 'social_wechat', 'conf_value' => '', 'conf_desc' => '微信', 'input_type' => 'text', 'conf_sort' => 90],
+            ['conf_group' => 'social', 'conf_key' => 'social_weibo', 'conf_value' => '', 'conf_desc' => '微博', 'input_type' => 'text', 'conf_sort' => 80],
+            ['conf_group' => 'social', 'conf_key' => 'social_douyin', 'conf_value' => '', 'conf_desc' => '抖音', 'input_type' => 'text', 'conf_sort' => 70],
+        ];
+    }
+
+    private function seedFriendLinks(): void
+    {
+        if (FriendLink::query()->exists()) {
+            return;
+        }
+
+        foreach ([
+            ['Laravel', 'https://laravel.com', 'PHP Web 框架', 20],
+            ['Element Plus', 'https://element-plus.org', 'Vue 组件库', 10],
+        ] as [$name, $url, $desc, $sort]) {
+            FriendLink::query()->create([
+                'id' => Snowflake::id(),
+                'link_name' => $name,
+                'link_url' => $url,
+                'link_logo' => '',
+                'link_desc' => $desc,
+                'link_sort' => $sort,
+                'link_status' => 1,
+            ]);
+        }
+    }
+
     private function syncPermissionsFromMenus(): void
     {
         $this->syncMenuPermissions('0', '0');
@@ -404,6 +506,7 @@ class RbacSeeder extends Seeder
 
         $admin->forceFill([
             'dept_id' => $root->id,
+            'post_id' => HrPost::query()->where('post_code', 'CEO')->value('id') ?: 0,
         ])->save();
 
         $root->forceFill([

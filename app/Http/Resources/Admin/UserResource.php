@@ -36,6 +36,8 @@ class UserResource extends JsonResource
             'real_auth_status_label' => $this->real_auth_status?->label(),
             'dept_id' => (string) $this->dept_id,
             'dept_name' => $this->department?->dept_name,
+            'post_id' => (string) $this->post_id,
+            'post_name' => $this->post?->post_name,
             'role_ids' => $this->whenLoaded('roles', fn () => $this->roles->map(fn ($role) => (string) $role->id)->all(), []),
             'roles' => $this->whenLoaded('roles', fn () => $this->roles->map(fn ($role) => [
                 'id' => (string) $role->id,

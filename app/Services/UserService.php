@@ -7,6 +7,7 @@ use App\Enums\UserStatus;
 use App\Http\Resources\Admin\UserResource;
 use App\Models\AuthRole;
 use App\Models\HrDepartment;
+use App\Models\HrPost;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -24,7 +25,7 @@ class UserService
     public function paginate(array $filters, User $operator): array
     {
         $paginator = $this->filteredQuery($filters, $operator)
-            ->with(['department', 'roles'])
+            ->with(['department', 'post', 'roles'])
             ->orderByDesc('created_at')
             ->paginate((int) ($filters['per_page'] ?? 10));
 
@@ -50,7 +51,7 @@ class UserService
             $user = User::query()->create($this->payload($data, true, $context));
             $this->syncRoles($user, $data, $operator);
 
-            return $user->load(['department', 'roles']);
+            return $user->load(['department', 'post', 'roles']);
         });
 
         return [
@@ -64,7 +65,7 @@ class UserService
      */
     public function find(string $id): array
     {
-        $user = User::query()->with(['department', 'roles'])->findOrFail($id);
+        $user = User::query()->with(['department', 'post', 'roles'])->findOrFail($id);
 
         return [
             'user' => UserResource::make($user)->resolve(),
@@ -83,7 +84,7 @@ class UserService
             $user->save();
             $this->syncRoles($user, $data, $operator);
 
-            return $user->fresh(['department', 'roles']);
+            return $user->fresh(['department', 'post', 'roles']);
         });
 
         return [
@@ -132,7 +133,7 @@ class UserService
 
         return [
             'message' => '状态已更新',
-            'user' => UserResource::make($user->fresh(['department', 'roles']))->resolve(),
+            'user' => UserResource::make($user->fresh(['department', 'post', 'roles']))->resolve(),
         ];
     }
 
@@ -152,18 +153,20 @@ class UserService
      */
     public function export(array $filters, User $operator): StreamedResponse
     {
-        $users = $this->filteredQuery($filters, $operator)->orderByDesc('created_at')->get();
+        $users = $this->filteredQuery($filters, $operator)->with(['department', 'post'])->orderByDesc('created_at')->get();
 
         return response()->streamDownload(function () use ($users): void {
             $handle = fopen('php://output', 'w');
             fwrite($handle, chr(0xEF).chr(0xBB).chr(0xBF));
-            fputcsv($handle, ['用户编号', '用户名称', '真实姓名', '手机号码', '邮箱', '状态', '实名状态', '创建时间']);
+            fputcsv($handle, ['用户编号', '用户名称', '真实姓名', '部门', '岗位', '手机号码', '邮箱', '状态', '实名状态', '创建时间']);
 
             foreach ($users as $user) {
                 fputcsv($handle, [
                     (string) $user->id,
                     $user->user_name,
                     $user->real_name,
+                    $user->department?->dept_name,
+                    $user->post?->post_name,
                     $user->user_mobile,
                     $user->user_email,
                     $user->user_status?->label(),
@@ -214,6 +217,7 @@ class UserService
             'lock_reason' => (string) ($data['lock_reason'] ?? ''),
             'lock_expire_time' => $data['lock_expire_time'] ?? null,
             'dept_id' => ($data['dept_id'] ?? 0) ?: 0,
+            'post_id' => $this->resolvePostId($data),
         ];
 
         if ($creating) {
@@ -226,6 +230,22 @@ class UserService
         }
 
         return $payload;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function resolvePostId(array $data): int|string
+    {
+        $postId = (string) ($data['post_id'] ?? '0');
+
+        if ($postId === '' || $postId === '0') {
+            return 0;
+        }
+
+        HrPost::query()->findOrFail($postId);
+
+        return $postId;
     }
 
     /**
