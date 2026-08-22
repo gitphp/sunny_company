@@ -33,6 +33,9 @@ class UploadController extends Controller
             ]);
         }
 
-        return response()->json($this->uploads->store($file), 201);
+        return response()->json($this->uploads->store(
+            $file,
+            (string) ($request->validated('scene') ?: 'products'),
+        ), 201);
     }
 }

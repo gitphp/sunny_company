@@ -125,7 +125,7 @@ bootstrap/compiled.php
 app/storage/
 
 # Laravel 5 & Lumen specific
-public/storage
+# public/storage  打开上传的图片文件夹
 public/hot
 
 # Laravel 5 & Lumen specific with changed public path
@@ -316,7 +316,8 @@ dist
 /node_modules
 /public/build
 /public/hot
-/public/storage
+# 打开上传的图片文件夹
+#/public/storage
 /storage/*.key
 /storage/pail
 /vendor

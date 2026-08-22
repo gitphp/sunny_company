@@ -37,8 +37,18 @@
         <el-table v-loading="loading" :data="rows" border>
             <el-table-column label="标题" prop="title" min-width="160" />
             <el-table-column label="广告位" prop="position_name" min-width="140" />
-            <el-table-column label="图片" min-width="160" show-overflow-tooltip>
-                <template #default="{ row }">{{ row.image_url || '-' }}</template>
+            <el-table-column label="图片" width="80" align="center">
+                <template #default="{ row }">
+                    <el-image
+                        v-if="row.image_url"
+                        :src="row.image_url"
+                        :preview-src-list="[row.image_url]"
+                        preview-teleported
+                        fit="cover"
+                        style="width:48px;height:48px;border-radius:4px"
+                    />
+                    <span v-else>-</span>
+                </template>
             </el-table-column>
             <el-table-column label="跳转" prop="link_url" min-width="160" show-overflow-tooltip />
             <el-table-column label="排序" prop="sort_order" width="80" align="center" />

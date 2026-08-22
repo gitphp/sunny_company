@@ -23,6 +23,7 @@ class UploadRequest extends SceneRequest
     {
         return [
             'file' => ['required', 'file', 'max:51200'],
+            'scene' => ['nullable', 'string', 'in:products,ads'],
         ];
     }
 

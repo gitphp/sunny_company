@@ -10,9 +10,12 @@
 
 import http from './http';
 
-export function uploadFile(file) {
+export function uploadFile(file, scene = 'products') {
     const payload = new FormData();
     payload.append('file', file);
+    if (scene) {
+        payload.append('scene', scene);
+    }
 
     return http.post('/uploads', payload);
 }

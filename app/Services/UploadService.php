@@ -21,12 +21,12 @@ class UploadService
     /**
      * @return array<string, mixed>
      */
-    public function store(UploadedFile $file): array
+    public function store(UploadedFile $file, string $scene = 'products'): array
     {
-        $this->assertAllowed($file);
-
+        $folder = $scene === 'ads' ? 'ads' : 'products';
+        $this->assertAllowed($file, $folder === 'ads');
         $extension = strtolower((string) $file->getClientOriginalExtension());
-        $directory = 'products/'.date('Y/m/d');
+        $directory = $folder.'/'.date('Y/m/d');
         $filename = Snowflake::id().($extension !== '' ? '.'.$extension : '');
         $path = $file->storeAs($directory, $filename, 'public');
 
@@ -50,15 +50,26 @@ class UploadService
         ];
     }
 
-    private function assertAllowed(UploadedFile $file): void
+    private function assertAllowed(UploadedFile $file, bool $imageOnly = false): void
     {
         $mime = (string) ($file->getMimeType() ?: '');
         $extension = strtolower((string) $file->getClientOriginalExtension());
+        $images = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
         $allowed = [
-            'jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp',
+            ...$images,
             'mp4', 'webm', 'mov',
             'pdf', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'rar',
         ];
+
+        if ($imageOnly) {
+            if (! in_array($extension, $images, true) && ! str_starts_with($mime, 'image/')) {
+                throw ValidationException::withMessages([
+                    'file' => ['请上传 jpg / png / gif / webp 图片'],
+                ]);
+            }
+
+            return;
+        }
 
         if (! in_array($extension, $allowed, true) && ! str_starts_with($mime, 'image/')) {
             throw ValidationException::withMessages([

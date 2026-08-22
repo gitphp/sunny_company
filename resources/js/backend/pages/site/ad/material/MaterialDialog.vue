@@ -20,8 +20,19 @@
             <el-form-item label="标题" prop="title">
                 <el-input v-model="form.title" />
             </el-form-item>
-            <el-form-item label="图片地址" prop="image_url">
-                <el-input v-model="form.image_url" placeholder="广告图片 URL" />
+            <el-form-item label="图片" prop="image_url">
+                <el-upload
+                    v-model:file-list="imageFiles"
+                    list-type="picture-card"
+                    :limit="1"
+                    accept="image/jpeg,image/png,image/gif,image/webp,image/bmp"
+                    :http-request="handleUpload"
+                    :on-remove="onRemoveImage"
+                    :on-preview="previewImage"
+                    :on-exceed="() => ElMessage.warning('只能上传一张图片')"
+                >
+                    <el-icon><Plus /></el-icon>
+                </el-upload>
             </el-form-item>
             <el-form-item label="跳转链接">
                 <el-input v-model="form.link_url" />
@@ -56,6 +67,9 @@
             <el-button @click="onClose">取消</el-button>
             <el-button type="primary" :loading="saving" @click="submit">确定</el-button>
         </template>
+        <el-dialog v-model="preview.visible" width="640px" append-to-body title="预览">
+            <img :src="preview.url" alt="" style="display:block;width:100%" />
+        </el-dialog>
     </el-dialog>
 </template>
 
@@ -63,6 +77,7 @@
 import { reactive, ref, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import { createAdMaterial, updateAdMaterial } from '../../../../api/ad';
+import { uploadFile } from '../../../../api/upload';
 
 const props = defineProps({
     modelValue: Boolean,
@@ -75,11 +90,13 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'saved']);
 const formRef = ref();
 const saving = ref(false);
+const imageFiles = ref([]);
+const preview = reactive({ visible: false, url: '' });
 const form = reactive(emptyForm());
 const rules = {
     position_id: [{ required: true, message: '请选择广告位', trigger: 'change' }],
     title: [{ required: true, message: '请输入广告标题', trigger: 'blur' }],
-    image_url: [{ required: true, message: '请输入广告图片地址', trigger: 'blur' }],
+    image_url: [{ required: true, message: '请上传广告图片', trigger: 'change' }],
 };
 
 watch(
@@ -94,6 +111,9 @@ watch(
         } else {
             Object.assign(form, emptyForm());
         }
+        fillImage(form.image_url);
+        preview.visible = false;
+        preview.url = '';
     },
 );
 
@@ -113,6 +133,36 @@ function emptyForm() {
 
 function onClose() {
     emit('update:modelValue', false);
+}
+
+function fillImage(url) {
+    imageFiles.value = url
+        ? [{ uid: url, name: 'image', url, status: 'success' }]
+        : [];
+}
+
+async function handleUpload(option) {
+    try {
+        const { data } = await uploadFile(option.file, 'ads');
+        form.image_url = data.file.file_url;
+        option.file.url = data.file.file_url;
+        option.onSuccess(data.file);
+        formRef.value?.validateField('image_url');
+    } catch (error) {
+        option.onError(error);
+        ElMessage.error(error.response?.data?.errors?.file?.[0] || error.response?.data?.message || '上传失败');
+    }
+}
+
+function onRemoveImage() {
+    form.image_url = '';
+}
+
+function previewImage(file) {
+    preview.url = file.url || file.response?.file_url || '';
+    if (preview.url) {
+        preview.visible = true;
+    }
 }
 
 async function submit() {
