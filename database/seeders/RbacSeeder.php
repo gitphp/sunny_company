@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Enums\DataScope;
+use App\Enums\JobStatus;
 use App\Enums\PermissionType;
 use App\Enums\RoleType;
 use App\Models\AdMaterial;
@@ -12,6 +13,7 @@ use App\Models\ArticleCategory;
 use App\Models\AuthMenu;
 use App\Models\AuthPermission;
 use App\Models\AuthRole;
+use App\Models\BossJob;
 use App\Models\FriendLink;
 use App\Models\HrDepartment;
 use App\Models\HrPost;
@@ -31,6 +33,7 @@ class RbacSeeder extends Seeder
         $this->seedSiteConfigs();
         $this->seedFriendLinks();
         $this->seedAdPositions();
+        $this->seedBossJobs();
         $this->syncPermissionsFromMenus();
         $super = $this->seedSuperAdminRole();
         $this->assignAdmin($root, $super);
@@ -183,6 +186,19 @@ class RbacSeeder extends Seeder
             ['新增', 'cms:ad-material:add', 50],
             ['修改', 'cms:ad-material:edit', 40],
             ['删除', 'cms:ad-material:remove', 30],
+        ]);
+
+        $this->ensureChildMenu($site, [
+            'menu_name' => '招聘职位',
+            'menu_icon' => 'Suitcase',
+            'menu_path' => '/site/job',
+            'component' => 'site/job/Index',
+            'permission_code' => 'cms:job:list',
+            'menu_sort' => 12,
+        ], [
+            ['新增', 'cms:job:add', 50],
+            ['修改', 'cms:job:edit', 40],
+            ['删除', 'cms:job:remove', 30],
         ]);
 
         $this->ensureChildMenu($site, [
@@ -487,6 +503,63 @@ class RbacSeeder extends Seeder
             'sort_order' => 10,
             'status' => 1,
         ]);
+    }
+
+    private function seedBossJobs(): void
+    {
+        if (BossJob::query()->exists()) {
+            return;
+        }
+
+        foreach ([
+            [
+                'job_title' => 'PHP 开发工程师',
+                'department' => '研发部',
+                'workplace' => '深圳',
+                'experience' => '3-5年',
+                'education' => '本科',
+                'salary_range' => '15-25K',
+                'description' => '负责公司官网与管理系统的后端开发与维护。',
+                'requirements' => "熟悉 PHP / Laravel\n具备 MySQL 与 Redis 使用经验",
+                'benefits' => '五险一金、弹性工作、年度体检',
+                'is_hot' => 1,
+                'job_status' => JobStatus::Published->value,
+                'job_sort' => 20,
+            ],
+            [
+                'job_title' => '前端开发工程师',
+                'department' => '研发部',
+                'workplace' => '深圳',
+                'experience' => '1-3年',
+                'education' => '本科',
+                'salary_range' => '12-20K',
+                'description' => '负责官网与后台管理系统的前端开发。',
+                'requirements' => "熟悉 Vue 3 / Element Plus\n了解前端工程化",
+                'benefits' => '五险一金、餐补、带薪年假',
+                'is_hot' => 0,
+                'job_status' => JobStatus::Published->value,
+                'job_sort' => 10,
+            ],
+            [
+                'job_title' => '市场专员',
+                'department' => '市场部',
+                'workplace' => '长沙',
+                'experience' => '不限',
+                'education' => '大专',
+                'salary_range' => '8-12K',
+                'description' => '负责市场活动策划与客户沟通。',
+                'requirements' => '沟通能力强，有相关经验优先',
+                'benefits' => '五险一金、绩效奖金',
+                'is_hot' => 0,
+                'job_status' => JobStatus::Pending->value,
+                'job_sort' => 0,
+            ],
+        ] as $item) {
+            BossJob::query()->create([
+                'id' => Snowflake::id(),
+                ...$item,
+            ]);
+        }
     }
 
     private function syncPermissionsFromMenus(): void

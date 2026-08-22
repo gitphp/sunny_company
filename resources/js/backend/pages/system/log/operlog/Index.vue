@@ -84,8 +84,8 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
-import { batchDeleteOperationLogs, deleteOperationLog, fetchOperationLog, fetchOperationLogs } from '../../../api/operlog';
-import { useUserStore } from '../../../stores/user';
+import { batchDeleteOperationLogs, deleteOperationLog, fetchOperationLog, fetchOperationLogs } from '../../../../api/operlog';
+import { useUserStore } from '../../../../stores/user';
 
 const userStore = useUserStore();
 const can = (code) => userStore.hasPermission(code);

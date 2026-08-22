@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\DepartmentController;
 use App\Http\Controllers\Admin\FeedbackController;
 use App\Http\Controllers\Admin\FriendLinkController;
+use App\Http\Controllers\Admin\JobController;
 use App\Http\Controllers\Admin\MenuController;
 use App\Http\Controllers\Admin\OperationLogController;
 use App\Http\Controllers\Admin\OptionController;
@@ -18,11 +19,14 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SiteConfigController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\FeedbackController as PublicFeedbackController;
+use App\Http\Controllers\JobController as PublicJobController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('api')->group(function () {
     Route::post('/feedbacks', [PublicFeedbackController::class, 'store'])->middleware('throttle:8,1');
     Route::get('/ads/{code}', [AdController::class, 'show']);
+    Route::get('/jobs', [PublicJobController::class, 'index']);
+    Route::get('/jobs/{job}', [PublicJobController::class, 'show']);
 
     Route::prefix('admin')->group(function () {
         Route::post('/login', [AdminAuthController::class, 'login'])->middleware('throttle:10,1');
@@ -90,6 +94,14 @@ Route::prefix('api')->group(function () {
             Route::put('/ad-positions/{position}/status', [AdPositionController::class, 'changeStatus'])->middleware('permission:cms:ad-position:edit');
             Route::put('/ad-positions/{position}', [AdPositionController::class, 'update'])->middleware('permission:cms:ad-position:edit');
             Route::delete('/ad-positions/{position}', [AdPositionController::class, 'destroy'])->middleware('permission:cms:ad-position:remove');
+
+            Route::post('/jobs/batch-delete', [JobController::class, 'batchDestroy'])->middleware('permission:cms:job:remove');
+            Route::put('/jobs/{job}/status', [JobController::class, 'changeStatus'])->middleware('permission:cms:job:edit');
+            Route::get('/jobs', [JobController::class, 'index'])->middleware('permission:cms:job:list');
+            Route::post('/jobs', [JobController::class, 'store'])->middleware('permission:cms:job:add');
+            Route::get('/jobs/{job}', [JobController::class, 'show'])->middleware('permission:cms:job:list');
+            Route::put('/jobs/{job}', [JobController::class, 'update'])->middleware('permission:cms:job:edit');
+            Route::delete('/jobs/{job}', [JobController::class, 'destroy'])->middleware('permission:cms:job:remove');
 
             Route::get('/ad-materials', [AdMaterialController::class, 'index'])->middleware('permission:cms:ad-material:list');
             Route::post('/ad-materials', [AdMaterialController::class, 'store'])->middleware('permission:cms:ad-material:add');

@@ -294,6 +294,27 @@ class AuthMenuSeeder extends Seeder
             ], $adMaterial->id);
         }
 
+        $job = $this->createMenu([
+            'menu_name' => '招聘职位',
+            'menu_icon' => 'Suitcase',
+            'menu_path' => '/site/job',
+            'component' => 'site/job/Index',
+            'permission_code' => 'cms:job:list',
+            'menu_sort' => 12,
+        ], $site->id);
+
+        foreach ([
+            ['新增', 'cms:job:add', 50],
+            ['修改', 'cms:job:edit', 40],
+            ['删除', 'cms:job:remove', 30],
+        ] as [$name, $code, $sort]) {
+            $this->createMenu([
+                'menu_name' => $name,
+                'permission_code' => $code,
+                'menu_sort' => $sort,
+            ], $job->id);
+        }
+
         $link = $this->createMenu([
             'menu_name' => '友情链接',
             'menu_icon' => 'Connection',
