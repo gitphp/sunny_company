@@ -78,9 +78,36 @@ class AuthMenuSeeder extends Seeder
             'menu_sort' => 70,
         ], $system->id);
 
+        $this->createMenu([
+            'menu_name' => '部门管理',
+            'menu_icon' => 'OfficeBuilding',
+            'menu_path' => '/system/dept',
+            'component' => 'placeholder/Index',
+            'menu_sort' => 60,
+        ], $system->id);
+
+        $post = $this->createMenu([
+            'menu_name' => '岗位管理',
+            'menu_icon' => 'Postcard',
+            'menu_path' => '/system/post',
+            'component' => 'system/post/Index',
+            'permission_code' => 'system:post:list',
+            'menu_sort' => 50,
+        ], $system->id);
+
         foreach ([
-            ['部门管理', 'OfficeBuilding', '/system/dept', 60],
-            ['岗位管理', 'Postcard', '/system/post', 50],
+            ['新增', 'system:post:add', 50],
+            ['修改', 'system:post:edit', 40],
+            ['删除', 'system:post:remove', 30],
+        ] as [$name, $code, $sort]) {
+            $this->createMenu([
+                'menu_name' => $name,
+                'permission_code' => $code,
+                'menu_sort' => $sort,
+            ], $post->id);
+        }
+
+        foreach ([
             ['字典管理', 'Collection', '/system/dict', 40],
             ['参数设置', 'EditPen', '/system/config', 30],
             ['通知公告', 'Bell', '/system/notice', 20],
@@ -159,13 +186,55 @@ class AuthMenuSeeder extends Seeder
             ], $tool->id);
         }
 
-        $this->createMenu([
+        $site = $this->createMenu([
             'menu_name' => '阳光官网',
             'menu_icon' => 'Link',
             'menu_path' => '/site',
-            'component' => 'placeholder/Index',
+            'component' => '',
             'menu_sort' => 100,
         ]);
+
+        $category = $this->createMenu([
+            'menu_name' => '文章分类',
+            'menu_icon' => 'FolderOpened',
+            'menu_path' => '/site/category',
+            'component' => 'site/category/Index',
+            'permission_code' => 'cms:category:list',
+            'menu_sort' => 20,
+        ], $site->id);
+
+        foreach ([
+            ['新增', 'cms:category:add', 50],
+            ['修改', 'cms:category:edit', 40],
+            ['删除', 'cms:category:remove', 30],
+        ] as [$name, $code, $sort]) {
+            $this->createMenu([
+                'menu_name' => $name,
+                'permission_code' => $code,
+                'menu_sort' => $sort,
+            ], $category->id);
+        }
+
+        $article = $this->createMenu([
+            'menu_name' => '文章管理',
+            'menu_icon' => 'Document',
+            'menu_path' => '/site/article',
+            'component' => 'site/article/Index',
+            'permission_code' => 'cms:article:list',
+            'menu_sort' => 10,
+        ], $site->id);
+
+        foreach ([
+            ['新增', 'cms:article:add', 50],
+            ['修改', 'cms:article:edit', 40],
+            ['删除', 'cms:article:remove', 30],
+        ] as [$name, $code, $sort]) {
+            $this->createMenu([
+                'menu_name' => $name,
+                'permission_code' => $code,
+                'menu_sort' => $sort,
+            ], $article->id);
+        }
 
         unset($home);
     }

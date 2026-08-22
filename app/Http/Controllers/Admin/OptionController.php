@@ -20,4 +20,14 @@ class OptionController extends Controller
     {
         return response()->json($this->options->departments());
     }
+
+    public function posts(OptionRequest $request): JsonResponse
+    {
+        return response()->json($this->options->posts());
+    }
+
+    public function articleCategories(OptionRequest $request): JsonResponse
+    {
+        return response()->json($this->options->articleCategories($request->validated()));
+    }
 }

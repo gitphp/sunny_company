@@ -15,3 +15,11 @@ export function fetchOptionDepartments() {
 export function fetchOptionMenus() {
     return http.get('/options/menus');
 }
+
+export function fetchOptionPosts() {
+    return http.get('/options/posts');
+}
+
+export function fetchOptionArticleCategories(params) {
+    return http.get('/options/article-categories', { params });
+}

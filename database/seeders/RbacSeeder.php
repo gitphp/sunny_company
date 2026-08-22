@@ -5,10 +5,13 @@ namespace Database\Seeders;
 use App\Enums\DataScope;
 use App\Enums\PermissionType;
 use App\Enums\RoleType;
+use App\Models\Article;
+use App\Models\ArticleCategory;
 use App\Models\AuthMenu;
 use App\Models\AuthPermission;
 use App\Models\AuthRole;
 use App\Models\HrDepartment;
+use App\Models\HrPost;
 use App\Models\User;
 use App\Support\Snowflake;
 use Illuminate\Database\Seeder;
@@ -19,9 +22,12 @@ class RbacSeeder extends Seeder
     {
         $this->ensureMenuMeta();
         $root = $this->seedDepartments();
+        $this->seedPosts();
+        $this->seedArticleCategories();
         $this->syncPermissionsFromMenus();
         $super = $this->seedSuperAdminRole();
         $this->assignAdmin($root, $super);
+        $this->seedSampleArticle();
     }
 
     private function ensureMenuMeta(): void
@@ -39,6 +45,14 @@ class RbacSeeder extends Seeder
         ]);
 
         $this->updateMenu('/system/menu', 'system/menu/Index', 'system:menu:list', []);
+
+        $this->updateMenu('/system/post', 'system/post/Index', 'system:post:list', [
+            ['新增', 'system:post:add', 50],
+            ['修改', 'system:post:edit', 40],
+            ['删除', 'system:post:remove', 30],
+        ]);
+
+        $this->ensureCmsMenus();
     }
 
     /**
@@ -56,6 +70,102 @@ class RbacSeeder extends Seeder
             'component' => $component,
             'permission_code' => $code,
         ])->save();
+
+        foreach ($buttons as [$name, $buttonCode, $sort]) {
+            AuthMenu::query()->firstOrCreate(
+                ['permission_code' => $buttonCode],
+                [
+                    'id' => Snowflake::id(),
+                    'parent_id' => $menu->id,
+                    'menu_name' => $name,
+                    'menu_icon' => '',
+                    'menu_path' => '',
+                    'component' => '',
+                    'menu_sort' => $sort,
+                    'menu_status' => 1,
+                ]
+            );
+        }
+    }
+
+    private function ensureCmsMenus(): void
+    {
+        $site = AuthMenu::query()->where('menu_path', '/site')->first();
+
+        if (! $site) {
+            $site = AuthMenu::query()->create([
+                'id' => Snowflake::id(),
+                'parent_id' => 0,
+                'menu_name' => '阳光官网',
+                'menu_icon' => 'Link',
+                'menu_path' => '/site',
+                'component' => '',
+                'permission_code' => '',
+                'menu_sort' => 100,
+                'menu_status' => 1,
+            ]);
+        } else {
+            $site->forceFill([
+                'component' => '',
+                'menu_icon' => $site->menu_icon ?: 'Link',
+            ])->save();
+        }
+
+        $this->ensureChildMenu($site, [
+            'menu_name' => '文章分类',
+            'menu_icon' => 'FolderOpened',
+            'menu_path' => '/site/category',
+            'component' => 'site/category/Index',
+            'permission_code' => 'cms:category:list',
+            'menu_sort' => 20,
+        ], [
+            ['新增', 'cms:category:add', 50],
+            ['修改', 'cms:category:edit', 40],
+            ['删除', 'cms:category:remove', 30],
+        ]);
+
+        $this->ensureChildMenu($site, [
+            'menu_name' => '文章管理',
+            'menu_icon' => 'Document',
+            'menu_path' => '/site/article',
+            'component' => 'site/article/Index',
+            'permission_code' => 'cms:article:list',
+            'menu_sort' => 10,
+        ], [
+            ['新增', 'cms:article:add', 50],
+            ['修改', 'cms:article:edit', 40],
+            ['删除', 'cms:article:remove', 30],
+        ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @param  list<array{0: string, 1: string, 2: int}>  $buttons
+     */
+    private function ensureChildMenu(AuthMenu $parent, array $data, array $buttons): void
+    {
+        $menu = AuthMenu::query()->where('menu_path', $data['menu_path'])->first();
+
+        if (! $menu) {
+            $menu = AuthMenu::query()->create([
+                'id' => Snowflake::id(),
+                'parent_id' => $parent->id,
+                'menu_name' => $data['menu_name'],
+                'menu_icon' => $data['menu_icon'] ?? '',
+                'menu_path' => $data['menu_path'],
+                'component' => $data['component'],
+                'permission_code' => $data['permission_code'],
+                'menu_sort' => $data['menu_sort'] ?? 0,
+                'menu_status' => 1,
+            ]);
+        } else {
+            $menu->forceFill([
+                'parent_id' => $parent->id,
+                'component' => $data['component'],
+                'permission_code' => $data['permission_code'],
+                'menu_icon' => $data['menu_icon'] ?? $menu->menu_icon,
+            ])->save();
+        }
 
         foreach ($buttons as [$name, $buttonCode, $sort]) {
             AuthMenu::query()->firstOrCreate(
@@ -111,6 +221,102 @@ class RbacSeeder extends Seeder
             'dept_sort' => $sort,
             'dept_status' => 1,
             'created_by' => 0,
+        ]);
+    }
+
+    private function seedPosts(): void
+    {
+        if (HrPost::query()->exists()) {
+            return;
+        }
+
+        $ceo = $this->createPost('总经理', 'CEO', 0, 90);
+        $manager = $this->createPost('部门经理', 'DEPT_MANAGER', $ceo->id, 80);
+        $this->createPost('技术主管', 'TECH_LEAD', $manager->id, 70);
+        $this->createPost('前端开发', 'FE_DEV', $manager->id, 60);
+        $this->createPost('财务专员', 'FINANCE', $manager->id, 50);
+    }
+
+    private function createPost(string $name, string $code, int|string $parentId, int $sort): HrPost
+    {
+        return HrPost::query()->create([
+            'id' => Snowflake::id(),
+            'parent_id' => $parentId,
+            'post_name' => $name,
+            'post_code' => $code,
+            'post_sort' => $sort,
+            'post_status' => 1,
+            'remark' => '',
+            'created_by' => 0,
+        ]);
+    }
+
+    private function seedArticleCategories(): void
+    {
+        if (ArticleCategory::query()->exists()) {
+            return;
+        }
+
+        foreach ([
+            ['公司新闻', 'company-news', 90],
+            ['产品动态', 'product', 80],
+            ['行业资讯', 'industry', 70],
+        ] as [$name, $url, $sort]) {
+            $this->createCategory(0, $name, $url, $sort);
+        }
+
+        $this->createCategory(1, '关于我们', 'about', 60);
+    }
+
+    private function createCategory(int $type, string $name, string $url, int $sort): ArticleCategory
+    {
+        return ArticleCategory::query()->create([
+            'id' => Snowflake::id(),
+            'cat_type' => $type,
+            'parent_id' => 0,
+            'cat_name' => $name,
+            'cat_url' => $url,
+            'description' => '',
+            'cat_sort' => $sort,
+            'status' => 1,
+        ]);
+    }
+
+    private function seedSampleArticle(): void
+    {
+        if (Article::query()->exists()) {
+            return;
+        }
+
+        $admin = User::query()->where('user_name', 'admin')->first();
+        $category = ArticleCategory::query()->where('cat_url', 'company-news')->first();
+
+        if (! $admin || ! $category) {
+            return;
+        }
+
+        Article::query()->create([
+            'id' => Snowflake::id(),
+            'title' => '阳光科技正式上线阳光管理系统',
+            'subtitle' => '统一后台，提升协同效率',
+            'art_cover' => '',
+            'art_content' => '<p>阳光管理系统已正式上线，覆盖用户、角色、部门、岗位与官网内容管理。</p>',
+            'content_type' => 1,
+            'summary' => '阳光管理系统正式上线，支持组织架构与官网内容一体化管理。',
+            'category_id' => $category->id,
+            'tag_ids' => [],
+            'author_id' => $admin->id,
+            'author_name' => mb_substr((string) $admin->real_name, 0, 16),
+            'source' => '原创',
+            'source_url' => '',
+            'art_status' => 4,
+            'is_top' => 1,
+            'is_original' => 1,
+            'is_commentable' => 1,
+            'seo_title' => '阳光科技正式上线阳光管理系统',
+            'seo_keywords' => '阳光科技,管理系统',
+            'seo_description' => '阳光管理系统正式上线。',
+            'published_at' => now(),
         ]);
     }
 
