@@ -44,6 +44,7 @@ return new class extends Migration
             $table->unique('user_email', 'uk_email');
             $table->index(['user_status', 'real_auth_status'], 'idx_status_auth');
             $table->index('created_at', 'idx_deleted_time');
+            $table->comment('用户账号表');
         });
     }
 

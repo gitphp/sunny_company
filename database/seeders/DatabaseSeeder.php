@@ -15,6 +15,12 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        $this->call(AuthMenuSeeder::class);
+
+        if (User::query()->where('user_name', 'admin')->exists()) {
+            return;
+        }
+
         User::factory()->create([
             'id' => 934035802554576899,
             'user_name' => 'admin',

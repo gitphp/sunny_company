@@ -6,13 +6,16 @@
                     <p class="text-xs font-semibold tracking-[0.2em] text-sun-deep uppercase">Sunny Company</p>
                     <h1 class="text-lg font-bold">账号中心</h1>
                 </div>
-                <button
-                    type="button"
-                    class="rounded-full border border-sand-dark px-4 py-2 text-sm font-medium hover:bg-sand"
-                    @click="onLogout"
-                >
-                    退出登录
-                </button>
+                <div class="flex items-center gap-3">
+                    <a href="/admin" class="rounded-full bg-sun px-4 py-2 text-sm font-medium text-white hover:bg-sun-deep">进入后台</a>
+                    <button
+                        type="button"
+                        class="rounded-full border border-sand-dark px-4 py-2 text-sm font-medium hover:bg-sand"
+                        @click="onLogout"
+                    >
+                        退出登录
+                    </button>
+                </div>
             </div>
         </header>
 

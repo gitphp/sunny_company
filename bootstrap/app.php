@@ -12,8 +12,17 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->redirectGuestsTo(fn () => '/login');
-        $middleware->redirectUsersTo(fn () => '/dashboard');
+        $middleware->redirectGuestsTo(function (Request $request): string {
+            return $request->is('admin') || $request->is('admin/*') || $request->is('api/admin/*')
+                ? '/admin/login'
+                : '/login';
+        });
+
+        $middleware->redirectUsersTo(function (Request $request): string {
+            return $request->is('admin') || $request->is('admin/*')
+                ? '/admin/index'
+                : '/dashboard';
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(function (Request $request, Throwable $e): bool {

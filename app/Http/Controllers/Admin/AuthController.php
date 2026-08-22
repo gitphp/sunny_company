@@ -1,11 +1,11 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
-use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
-use App\Models\User;
+use App\Models\AuthMenu;
 use App\Services\UserAuthenticator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -13,29 +13,6 @@ use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    public function register(RegisterRequest $request): JsonResponse
-    {
-        $user = User::query()->create([
-            'user_name' => $request->string('user_name')->toString(),
-            'real_name' => $request->string('real_name')->toString(),
-            'user_mobile' => $request->string('user_mobile')->toString(),
-            'user_email' => $request->string('user_email')->toString(),
-            'password_hash' => $request->string('password')->toString(),
-            'password_salt' => '',
-            'register_ip' => (string) $request->ip(),
-            'register_device' => mb_substr((string) $request->userAgent(), 0, 128),
-            'register_channel' => 'web',
-        ]);
-
-        Auth::login($user);
-        $request->session()->regenerate();
-
-        return response()->json([
-            'message' => '注册成功',
-            'user' => UserResource::make($user)->resolve(),
-        ], 201);
-    }
-
     public function login(LoginRequest $request, UserAuthenticator $authenticator): JsonResponse
     {
         $user = $authenticator->attempt(
@@ -69,5 +46,46 @@ class AuthController extends Controller
         return response()->json([
             'user' => UserResource::make($request->user())->resolve(),
         ]);
+    }
+
+    public function menus(): JsonResponse
+    {
+        $menus = AuthMenu::ordered();
+        $tree = AuthMenu::buildTree($menus);
+
+        return response()->json([
+            'menus' => $this->sidebarTree($tree),
+            'permissions' => $menus
+                ->pluck('permission_code')
+                ->filter()
+                ->values(),
+        ]);
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $tree
+     * @return array<int, array<string, mixed>>
+     */
+    private function sidebarTree(array $tree): array
+    {
+        $items = [];
+
+        foreach ($tree as $node) {
+            if (($node['menu_status'] ?? 1) !== 1) {
+                continue;
+            }
+
+            if ($node['is_button'] ?? false) {
+                continue;
+            }
+
+            if (isset($node['children'])) {
+                $node['children'] = $this->sidebarTree($node['children']);
+            }
+
+            $items[] = $node;
+        }
+
+        return $items;
     }
 }

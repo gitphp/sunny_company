@@ -57,6 +57,8 @@
                     <p class="mt-6 text-center text-sm text-ink-soft">
                         还没有账号？
                         <router-link to="/register" class="font-semibold text-leaf hover:underline">立即注册</router-link>
+                        <span class="mx-2">·</span>
+                        <a href="/admin/login" class="font-semibold text-sun-deep hover:underline">后台管理</a>
                     </p>
                 </section>
             </div>
