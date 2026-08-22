@@ -93,6 +93,10 @@ class RecordOperationLog
             'ad-materials' => 'ad_material',
             'jobs' => 'job',
             'ai' => 'ai',
+            'product-brands' => 'brand',
+            'product-categories' => 'prod_cat',
+            'product-specs' => 'prod_spec',
+            'products' => 'product',
             default => mb_substr($segment, 0, 16),
         };
     }
@@ -136,7 +140,7 @@ class RecordOperationLog
      */
     private function label(Request $request, array $body): string
     {
-        foreach (['title', 'job_title', 'provider_name', 'user_name', 'role_name', 'dept_name', 'post_name', 'link_name', 'cat_name', 'fb_title', 'menu_name', 'pos_name'] as $field) {
+        foreach (['title', 'job_title', 'provider_name', 'product_name', 'brand_name', 'category_name', 'spec_name', 'user_name', 'role_name', 'dept_name', 'post_name', 'link_name', 'cat_name', 'fb_title', 'menu_name', 'pos_name'] as $field) {
             $value = $request->input($field);
 
             if (is_string($value) && $value !== '') {

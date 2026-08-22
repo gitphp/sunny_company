@@ -35,4 +35,19 @@ class OptionController extends Controller
     {
         return response()->json($this->options->adPositions());
     }
+
+    public function productBrands(OptionRequest $request): JsonResponse
+    {
+        return response()->json($this->options->productBrands());
+    }
+
+    public function productCategories(OptionRequest $request): JsonResponse
+    {
+        return response()->json($this->options->productCategories());
+    }
+
+    public function productSpecs(OptionRequest $request): JsonResponse
+    {
+        return response()->json($this->options->productSpecs());
+    }
 }

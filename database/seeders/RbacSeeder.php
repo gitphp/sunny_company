@@ -18,6 +18,13 @@ use App\Models\BossJob;
 use App\Models\FriendLink;
 use App\Models\HrDepartment;
 use App\Models\HrPost;
+use App\Models\Product;
+use App\Models\ProductBrand;
+use App\Models\ProductCategory;
+use App\Models\ProductSku;
+use App\Models\ProductSkuSpecValue;
+use App\Models\ProductSpecification;
+use App\Models\ProductSpecificationValue;
 use App\Models\SiteConfig;
 use App\Models\User;
 use App\Support\Snowflake;
@@ -36,6 +43,7 @@ class RbacSeeder extends Seeder
         $this->seedAdPositions();
         $this->seedBossJobs();
         $this->seedAiProviders();
+        $this->seedProducts();
         $this->syncPermissionsFromMenus();
         $super = $this->seedSuperAdminRole();
         $this->assignAdmin($root, $super);
@@ -73,6 +81,7 @@ class RbacSeeder extends Seeder
         ]);
 
         $this->ensureCmsMenus();
+        $this->ensureProductMenus();
     }
 
     /**
@@ -230,6 +239,82 @@ class RbacSeeder extends Seeder
         ], [
             ['回复', 'cms:feedback:reply', 40],
             ['删除', 'cms:feedback:remove', 30],
+        ]);
+    }
+
+    private function ensureProductMenus(): void
+    {
+        $product = AuthMenu::query()->where('menu_path', '/product')->first();
+
+        if (! $product) {
+            $product = AuthMenu::query()->create([
+                'id' => Snowflake::id(),
+                'parent_id' => 0,
+                'menu_name' => '产品管理',
+                'menu_icon' => 'Goods',
+                'menu_path' => '/product',
+                'component' => '',
+                'permission_code' => '',
+                'menu_sort' => 200,
+                'menu_status' => 1,
+            ]);
+        } else {
+            $product->forceFill([
+                'component' => '',
+                'menu_icon' => $product->menu_icon ?: 'Goods',
+            ])->save();
+        }
+
+        $this->ensureChildMenu($product, [
+            'menu_name' => '商品管理',
+            'menu_icon' => 'ShoppingCart',
+            'menu_path' => '/product/list',
+            'component' => 'product/Index',
+            'permission_code' => 'product:list',
+            'menu_sort' => 40,
+        ], [
+            ['新增', 'product:add', 50],
+            ['修改', 'product:edit', 40],
+            ['删除', 'product:remove', 30],
+        ]);
+
+        $this->ensureChildMenu($product, [
+            'menu_name' => '商品分类',
+            'menu_icon' => 'Menu',
+            'menu_path' => '/product/category',
+            'component' => 'product/category/Index',
+            'permission_code' => 'product:category:list',
+            'menu_sort' => 30,
+        ], [
+            ['新增', 'product:category:add', 50],
+            ['修改', 'product:category:edit', 40],
+            ['删除', 'product:category:remove', 30],
+        ]);
+
+        $this->ensureChildMenu($product, [
+            'menu_name' => '品牌管理',
+            'menu_icon' => 'Medal',
+            'menu_path' => '/product/brand',
+            'component' => 'product/brand/Index',
+            'permission_code' => 'product:brand:list',
+            'menu_sort' => 20,
+        ], [
+            ['新增', 'product:brand:add', 50],
+            ['修改', 'product:brand:edit', 40],
+            ['删除', 'product:brand:remove', 30],
+        ]);
+
+        $this->ensureChildMenu($product, [
+            'menu_name' => '规格管理',
+            'menu_icon' => 'SetUp',
+            'menu_path' => '/product/spec',
+            'component' => 'product/spec/Index',
+            'permission_code' => 'product:spec:list',
+            'menu_sort' => 10,
+        ], [
+            ['新增', 'product:spec:add', 50],
+            ['修改', 'product:spec:edit', 40],
+            ['删除', 'product:spec:remove', 30],
         ]);
     }
 
@@ -610,6 +695,166 @@ class RbacSeeder extends Seeder
                 ...$item,
             ]);
         }
+    }
+
+    private function seedProducts(): void
+    {
+        if (ProductBrand::query()->exists()) {
+            return;
+        }
+
+        $brand = ProductBrand::query()->create([
+            'id' => Snowflake::id(),
+            'brand_code' => 'BR000001',
+            'brand_name' => '名杨',
+            'alias' => 'MingYang',
+            'is_system' => 1,
+            'is_show' => 1,
+            'sort_order' => 20,
+        ]);
+
+        ProductBrand::query()->create([
+            'id' => Snowflake::id(),
+            'brand_code' => 'BR000002',
+            'brand_name' => '无品牌',
+            'alias' => '',
+            'is_system' => 1,
+            'is_show' => 1,
+            'sort_order' => 0,
+        ]);
+
+        $furniture = ProductCategory::query()->create([
+            'id' => Snowflake::id(),
+            'category_code' => 'FL000001',
+            'category_name' => '家具',
+            'parent_id' => 0,
+            'level' => 1,
+            'unit' => '件',
+            'cat_status' => 1,
+            'sort_order' => 20,
+        ]);
+
+        $sofa = ProductCategory::query()->create([
+            'id' => Snowflake::id(),
+            'category_code' => 'FL000002',
+            'category_name' => '沙发',
+            'parent_id' => $furniture->id,
+            'level' => 2,
+            'unit' => '套',
+            'cat_status' => 1,
+            'sort_order' => 10,
+        ]);
+
+        $color = ProductSpecification::query()->create([
+            'id' => Snowflake::id(),
+            'spec_code' => 'GL000001',
+            'spec_name' => '颜色',
+            'spec_status' => 1,
+            'sort_order' => 20,
+        ]);
+
+        $size = ProductSpecification::query()->create([
+            'id' => Snowflake::id(),
+            'spec_code' => 'GL000002',
+            'spec_name' => '尺寸',
+            'spec_status' => 1,
+            'sort_order' => 10,
+        ]);
+
+        $white = ProductSpecificationValue::query()->create([
+            'id' => Snowflake::id(),
+            'spec_id' => $color->id,
+            'value_code' => 'GV000001',
+            'value' => '米白',
+            'sort_order' => 20,
+            'value_status' => 1,
+        ]);
+
+        $grey = ProductSpecificationValue::query()->create([
+            'id' => Snowflake::id(),
+            'spec_id' => $color->id,
+            'value_code' => 'GV000002',
+            'value' => '灰色',
+            'sort_order' => 10,
+            'value_status' => 1,
+        ]);
+
+        $sizeA = ProductSpecificationValue::query()->create([
+            'id' => Snowflake::id(),
+            'spec_id' => $size->id,
+            'value_code' => 'GV000003',
+            'value' => '2.2m',
+            'sort_order' => 10,
+            'value_status' => 1,
+        ]);
+
+        $product = Product::query()->create([
+            'id' => Snowflake::id(),
+            'auto_code' => 'SP000001',
+            'product_name' => '名杨布艺沙发',
+            'product_model' => 'MY-SF-01',
+            'category_id' => $sofa->id,
+            'brand_id' => $brand->id,
+            'material_quality' => '棉麻',
+            'filling' => '高弹海绵',
+            'short_desc' => '示例商品，可在后台继续完善 SKU 与图片。',
+            'product_status' => 1,
+            'sort_order' => 10,
+        ]);
+
+        $sku = ProductSku::query()->create([
+            'id' => Snowflake::id(),
+            'product_id' => $product->id,
+            'sku_code' => 'SK000001',
+            'price' => 2999,
+            'market_price' => 3999,
+            'cost_price' => 1800,
+            'stock_num' => 20,
+            'sale_status' => 1,
+            'sort_order' => 10,
+        ]);
+
+        ProductSkuSpecValue::query()->create([
+            'id' => Snowflake::id(),
+            'sku_id' => $sku->id,
+            'spec_id' => $color->id,
+            'spec_value_id' => $white->id,
+        ]);
+
+        ProductSkuSpecValue::query()->create([
+            'id' => Snowflake::id(),
+            'sku_id' => $sku->id,
+            'spec_id' => $size->id,
+            'spec_value_id' => $sizeA->id,
+        ]);
+
+        $skuGrey = ProductSku::query()->create([
+            'id' => Snowflake::id(),
+            'product_id' => $product->id,
+            'sku_code' => 'SK000002',
+            'price' => 3099,
+            'market_price' => 4099,
+            'cost_price' => 1850,
+            'stock_num' => 12,
+            'sale_status' => 1,
+            'sort_order' => 9,
+        ]);
+
+        ProductSkuSpecValue::query()->create([
+            'id' => Snowflake::id(),
+            'sku_id' => $skuGrey->id,
+            'spec_id' => $color->id,
+            'spec_value_id' => $grey->id,
+        ]);
+
+        ProductSkuSpecValue::query()->create([
+            'id' => Snowflake::id(),
+            'sku_id' => $skuGrey->id,
+            'spec_id' => $size->id,
+            'spec_value_id' => $sizeA->id,
+        ]);
+
+        $sofa->forceFill(['product_count' => 1])->save();
     }
 
     private function syncPermissionsFromMenus(): void

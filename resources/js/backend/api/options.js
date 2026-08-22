@@ -27,3 +27,15 @@ export function fetchOptionArticleCategories(params) {
 export function fetchOptionAdPositions() {
     return http.get('/options/ad-positions');
 }
+
+export function fetchOptionProductBrands() {
+    return http.get('/options/product-brands');
+}
+
+export function fetchOptionProductCategories() {
+    return http.get('/options/product-categories');
+}
+
+export function fetchOptionProductSpecs() {
+    return http.get('/options/product-specs');
+}

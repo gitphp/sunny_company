@@ -194,6 +194,98 @@ class AuthMenuSeeder extends Seeder
             ], $tool->id);
         }
 
+        $productRoot = $this->createMenu([
+            'menu_name' => '产品管理',
+            'menu_icon' => 'Goods',
+            'menu_path' => '/product',
+            'component' => '',
+            'menu_sort' => 200,
+        ]);
+
+        $productList = $this->createMenu([
+            'menu_name' => '商品管理',
+            'menu_icon' => 'ShoppingCart',
+            'menu_path' => '/product/list',
+            'component' => 'product/Index',
+            'permission_code' => 'product:list',
+            'menu_sort' => 40,
+        ], $productRoot->id);
+
+        foreach ([
+            ['新增', 'product:add', 50],
+            ['修改', 'product:edit', 40],
+            ['删除', 'product:remove', 30],
+        ] as [$name, $code, $sort]) {
+            $this->createMenu([
+                'menu_name' => $name,
+                'permission_code' => $code,
+                'menu_sort' => $sort,
+            ], $productList->id);
+        }
+
+        $productCategory = $this->createMenu([
+            'menu_name' => '商品分类',
+            'menu_icon' => 'Menu',
+            'menu_path' => '/product/category',
+            'component' => 'product/category/Index',
+            'permission_code' => 'product:category:list',
+            'menu_sort' => 30,
+        ], $productRoot->id);
+
+        foreach ([
+            ['新增', 'product:category:add', 50],
+            ['修改', 'product:category:edit', 40],
+            ['删除', 'product:category:remove', 30],
+        ] as [$name, $code, $sort]) {
+            $this->createMenu([
+                'menu_name' => $name,
+                'permission_code' => $code,
+                'menu_sort' => $sort,
+            ], $productCategory->id);
+        }
+
+        $productBrand = $this->createMenu([
+            'menu_name' => '品牌管理',
+            'menu_icon' => 'Medal',
+            'menu_path' => '/product/brand',
+            'component' => 'product/brand/Index',
+            'permission_code' => 'product:brand:list',
+            'menu_sort' => 20,
+        ], $productRoot->id);
+
+        foreach ([
+            ['新增', 'product:brand:add', 50],
+            ['修改', 'product:brand:edit', 40],
+            ['删除', 'product:brand:remove', 30],
+        ] as [$name, $code, $sort]) {
+            $this->createMenu([
+                'menu_name' => $name,
+                'permission_code' => $code,
+                'menu_sort' => $sort,
+            ], $productBrand->id);
+        }
+
+        $productSpec = $this->createMenu([
+            'menu_name' => '规格管理',
+            'menu_icon' => 'SetUp',
+            'menu_path' => '/product/spec',
+            'component' => 'product/spec/Index',
+            'permission_code' => 'product:spec:list',
+            'menu_sort' => 10,
+        ], $productRoot->id);
+
+        foreach ([
+            ['新增', 'product:spec:add', 50],
+            ['修改', 'product:spec:edit', 40],
+            ['删除', 'product:spec:remove', 30],
+        ] as [$name, $code, $sort]) {
+            $this->createMenu([
+                'menu_name' => $name,
+                'permission_code' => $code,
+                'menu_sort' => $sort,
+            ], $productSpec->id);
+        }
+
         $site = $this->createMenu([
             'menu_name' => '名杨科技官网',
             'menu_icon' => 'Link',

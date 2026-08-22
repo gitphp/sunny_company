@@ -7,6 +7,9 @@ use App\Models\ArticleCategory;
 use App\Models\AuthRole;
 use App\Models\HrDepartment;
 use App\Models\HrPost;
+use App\Models\ProductBrand;
+use App\Models\ProductCategory;
+use App\Models\ProductSpecification;
 
 class OptionService
 {
@@ -91,6 +94,63 @@ class OptionService
                 'pos_code' => $position->pos_code,
                 'ad_width' => (int) $position->ad_width,
                 'ad_height' => (int) $position->ad_height,
+            ])->values(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function productBrands(): array
+    {
+        $brands = ProductBrand::query()
+            ->where('is_show', 1)
+            ->orderByDesc('sort_order')
+            ->orderBy('id')
+            ->get(['id', 'brand_name', 'brand_code']);
+
+        return [
+            'brands' => $brands->map(fn (ProductBrand $brand) => [
+                'id' => (string) $brand->id,
+                'brand_name' => $brand->brand_name,
+                'brand_code' => $brand->brand_code,
+            ])->values(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function productCategories(): array
+    {
+        return [
+            'categories' => ProductCategory::buildTree(
+                ProductCategory::query()->where('cat_status', 1)->orderByDesc('sort_order')->orderBy('id')->get()
+            ),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function productSpecs(): array
+    {
+        $specs = ProductSpecification::query()
+            ->with(['values' => fn ($query) => $query->where('value_status', 1)])
+            ->where('spec_status', 1)
+            ->orderByDesc('sort_order')
+            ->orderBy('id')
+            ->get();
+
+        return [
+            'specs' => $specs->map(fn (ProductSpecification $spec) => [
+                'id' => (string) $spec->id,
+                'spec_name' => $spec->spec_name,
+                'values' => $spec->values->map(fn ($value) => [
+                    'id' => (string) $value->id,
+                    'spec_id' => (string) $value->spec_id,
+                    'value' => $value->value,
+                ])->values(),
             ])->values(),
         ];
     }

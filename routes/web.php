@@ -18,11 +18,16 @@ use App\Http\Controllers\Admin\OperationLogController;
 use App\Http\Controllers\Admin\OptionController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\PostController;
+use App\Http\Controllers\Admin\ProductBrandController;
+use App\Http\Controllers\Admin\ProductCategoryController;
+use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ProductSpecificationController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SiteConfigController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\FeedbackController as PublicFeedbackController;
 use App\Http\Controllers\JobController as PublicJobController;
+use App\Http\Controllers\ProductController as PublicProductController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('api')->group(function () {
@@ -30,6 +35,8 @@ Route::prefix('api')->group(function () {
     Route::get('/ads/{code}', [AdController::class, 'show']);
     Route::get('/jobs', [PublicJobController::class, 'index']);
     Route::get('/jobs/{job}', [PublicJobController::class, 'show']);
+    Route::get('/products', [PublicProductController::class, 'index']);
+    Route::get('/products/{product}', [PublicProductController::class, 'show']);
 
     Route::prefix('admin')->group(function () {
         Route::post('/login', [AdminAuthController::class, 'login'])->middleware('throttle:10,1');
@@ -55,6 +62,9 @@ Route::prefix('api')->group(function () {
             Route::get('/options/posts', [OptionController::class, 'posts']);
             Route::get('/options/article-categories', [OptionController::class, 'articleCategories']);
             Route::get('/options/ad-positions', [OptionController::class, 'adPositions']);
+            Route::get('/options/product-brands', [OptionController::class, 'productBrands']);
+            Route::get('/options/product-categories', [OptionController::class, 'productCategories']);
+            Route::get('/options/product-specs', [OptionController::class, 'productSpecs']);
             Route::get('/options/menus', [MenuController::class, 'index']);
 
             Route::get('/users/export', [UserController::class, 'export'])->middleware('permission:system:user:export');
@@ -140,6 +150,34 @@ Route::prefix('api')->group(function () {
             Route::get('/operation-logs', [OperationLogController::class, 'index'])->middleware('permission:system:operlog:list');
             Route::get('/operation-logs/{log}', [OperationLogController::class, 'show'])->middleware('permission:system:operlog:list');
             Route::delete('/operation-logs/{log}', [OperationLogController::class, 'destroy'])->middleware('permission:system:operlog:remove');
+
+            Route::get('/product-brands', [ProductBrandController::class, 'index'])->middleware('permission:product:brand:list');
+            Route::post('/product-brands', [ProductBrandController::class, 'store'])->middleware('permission:product:brand:add');
+            Route::put('/product-brands/{brand}/status', [ProductBrandController::class, 'changeStatus'])->middleware('permission:product:brand:edit');
+            Route::put('/product-brands/{brand}', [ProductBrandController::class, 'update'])->middleware('permission:product:brand:edit');
+            Route::delete('/product-brands/{brand}', [ProductBrandController::class, 'destroy'])->middleware('permission:product:brand:remove');
+
+            Route::get('/product-categories', [ProductCategoryController::class, 'index'])->middleware('permission:product:category:list');
+            Route::post('/product-categories', [ProductCategoryController::class, 'store'])->middleware('permission:product:category:add');
+            Route::put('/product-categories/{category}', [ProductCategoryController::class, 'update'])->middleware('permission:product:category:edit');
+            Route::delete('/product-categories/{category}', [ProductCategoryController::class, 'destroy'])->middleware('permission:product:category:remove');
+
+            Route::get('/product-specs', [ProductSpecificationController::class, 'index'])->middleware('permission:product:spec:list');
+            Route::post('/product-specs', [ProductSpecificationController::class, 'store'])->middleware('permission:product:spec:add');
+            Route::put('/product-specs/{spec}/status', [ProductSpecificationController::class, 'changeStatus'])->middleware('permission:product:spec:edit');
+            Route::post('/product-specs/{spec}/values', [ProductSpecificationController::class, 'createValue'])->middleware('permission:product:spec:add');
+            Route::put('/product-specs/{spec}/values/{value}', [ProductSpecificationController::class, 'updateValue'])->middleware('permission:product:spec:edit');
+            Route::delete('/product-specs/{spec}/values/{value}', [ProductSpecificationController::class, 'destroyValue'])->middleware('permission:product:spec:remove');
+            Route::put('/product-specs/{spec}', [ProductSpecificationController::class, 'update'])->middleware('permission:product:spec:edit');
+            Route::delete('/product-specs/{spec}', [ProductSpecificationController::class, 'destroy'])->middleware('permission:product:spec:remove');
+
+            Route::post('/products/batch-delete', [ProductController::class, 'batchDestroy'])->middleware('permission:product:remove');
+            Route::put('/products/{product}/status', [ProductController::class, 'changeStatus'])->middleware('permission:product:edit');
+            Route::get('/products', [ProductController::class, 'index'])->middleware('permission:product:list');
+            Route::post('/products', [ProductController::class, 'store'])->middleware('permission:product:add');
+            Route::get('/products/{product}', [ProductController::class, 'show'])->middleware('permission:product:list');
+            Route::put('/products/{product}', [ProductController::class, 'update'])->middleware('permission:product:edit');
+            Route::delete('/products/{product}', [ProductController::class, 'destroy'])->middleware('permission:product:remove');
         });
     });
 });
