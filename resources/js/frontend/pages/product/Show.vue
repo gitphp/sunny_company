@@ -50,8 +50,12 @@ import { fetchProduct } from '../../api/site';
 const route = useRoute();
 const product = ref({});
 const cover = computed(() => {
-    const images = (product.value.media || []).filter((item) => item.media_type === 1 || item.media_type === 2);
-    return images[0]?.file_url || product.value.main_image_url || '';
+    const images = (product.value.media || []).filter((item) => {
+        const url = item.file_url || '';
+        return (item.media_type === 1 || item.media_type === 2) && url && !url.startsWith('blob:');
+    });
+    const fallback = product.value.main_image_url || '';
+    return images[0]?.file_url || (fallback.startsWith('blob:') ? '' : fallback);
 });
 
 async function load() {

@@ -261,7 +261,7 @@ class ProductService
             'material_quality' => (string) ($data['material_quality'] ?? ''),
             'filling' => (string) ($data['filling'] ?? ''),
             'short_desc' => (string) ($data['short_desc'] ?? ''),
-            'main_image_url' => (string) ($data['main_image_url'] ?? ''),
+            'main_image_url' => $this->storedUrl((string) ($data['main_image_url'] ?? '')),
             'product_status' => (int) ($data['product_status'] ?? 1),
             'sort_order' => (int) ($data['sort_order'] ?? 0),
         ];
@@ -461,7 +461,7 @@ class ProductService
             return is_array($data['media']) ? $data['media'] : [];
         }
 
-        $url = trim((string) ($data['main_image_url'] ?? ''));
+        $url = $this->storedUrl((string) ($data['main_image_url'] ?? ''));
 
         if ($url === '') {
             return [];
@@ -485,7 +485,7 @@ class ProductService
         $keepIds = [];
 
         foreach ($rows as $index => $row) {
-            $url = trim((string) ($row['file_url'] ?? ''));
+            $url = $this->storedUrl((string) ($row['file_url'] ?? ''));
 
             if ($url === '') {
                 continue;
@@ -536,8 +536,19 @@ class ProductService
             ->orderBy('id')
             ->first();
 
-        $product->main_image_url = $main?->file_url ?? '';
+        $product->main_image_url = $this->storedUrl((string) ($main?->file_url ?? ''));
         $product->save();
+    }
+
+    private function storedUrl(string $url): string
+    {
+        $url = trim($url);
+
+        if ($url === '' || str_starts_with($url, 'blob:')) {
+            return '';
+        }
+
+        return $url;
     }
 
     private function deleteMedia(ProductMedia $media, string $operatorId): void

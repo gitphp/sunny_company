@@ -74,7 +74,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, watch } from 'vue';
+import { nextTick, reactive, ref, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import { createAdMaterial, updateAdMaterial } from '../../../../api/ad';
 import { uploadFile } from '../../../../api/upload';
@@ -145,8 +145,13 @@ async function handleUpload(option) {
     try {
         const { data } = await uploadFile(option.file, 'ads');
         form.image_url = data.file.file_url;
-        option.file.url = data.file.file_url;
         option.onSuccess(data.file);
+        await nextTick();
+        imageFiles.value = imageFiles.value.map((item) => (
+            item.uid === option.file.uid
+                ? { ...item, url: data.file.file_url, status: 'success', response: data.file }
+                : item
+        ));
         formRef.value?.validateField('image_url');
     } catch (error) {
         option.onError(error);
@@ -159,7 +164,8 @@ function onRemoveImage() {
 }
 
 function previewImage(file) {
-    preview.url = file.url || file.response?.file_url || '';
+    const url = file.response?.file_url || file.url || '';
+    preview.url = url.startsWith('blob:') ? '' : url;
     if (preview.url) {
         preview.visible = true;
     }

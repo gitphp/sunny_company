@@ -171,7 +171,7 @@ class AdMaterialService
         return [
             'position_id' => $positionId,
             'title' => (string) ($data['title'] ?? ''),
-            'image_url' => (string) ($data['image_url'] ?? ''),
+            'image_url' => $this->storedUrl((string) ($data['image_url'] ?? '')),
             'link_url' => (string) ($data['link_url'] ?? ''),
             'target' => (string) ($data['target'] ?? '_blank'),
             'sort_order' => (int) ($data['sort_order'] ?? 0),
@@ -179,6 +179,17 @@ class AdMaterialService
             'end_time' => $end ?: null,
             'status' => (int) ($data['status'] ?? 1),
         ];
+    }
+
+    private function storedUrl(string $url): string
+    {
+        $url = trim($url);
+
+        if ($url === '' || str_starts_with($url, 'blob:')) {
+            return '';
+        }
+
+        return $url;
     }
 
     /**

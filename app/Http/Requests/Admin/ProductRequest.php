@@ -82,7 +82,7 @@ class ProductRequest extends SceneRequest
             'material_quality' => ['nullable', 'string', 'max:128'],
             'filling' => ['nullable', 'string', 'max:128'],
             'short_desc' => ['nullable', 'string'],
-            'main_image_url' => ['nullable', 'string', 'max:512'],
+            'main_image_url' => ['nullable', 'string', 'max:512', 'not_regex:/^blob:/i'],
             'product_status' => ['nullable', 'integer', 'in:0,1'],
             'sort_order' => ['nullable', 'integer', 'min:0'],
             'skus' => ['nullable', 'array'],
@@ -101,7 +101,7 @@ class ProductRequest extends SceneRequest
             'media' => ['nullable', 'array'],
             'media.*.id' => ['nullable', 'string'],
             'media.*.media_type' => ['required', 'integer', 'in:1,2,3,4,5'],
-            'media.*.file_url' => ['required', 'string'],
+            'media.*.file_url' => ['required', 'string', 'max:512', 'not_regex:/^blob:/i'],
             'media.*.file_name' => ['nullable', 'string', 'max:255'],
             'media.*.file_key' => ['nullable', 'string', 'max:512'],
             'media.*.storage_provider' => ['nullable', 'string', 'max:32'],
@@ -122,6 +122,17 @@ class ProductRequest extends SceneRequest
             'category_id' => '商品分类',
             'skus' => 'SKU',
             'media' => '商品图片',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'main_image_url.not_regex' => '请重新上传商品图片',
+            'media.*.file_url.not_regex' => '请重新上传商品图片',
         ];
     }
 }

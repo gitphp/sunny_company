@@ -52,7 +52,7 @@
                     <el-table-column label="主图" width="76" align="center">
                         <template #default="{ row }">
                             <el-image
-                                v-if="row.main_image_url"
+                                v-if="row.main_image_url && !String(row.main_image_url).startsWith('blob:')"
                                 :src="row.main_image_url"
                                 :preview-src-list="[row.main_image_url]"
                                 preview-teleported

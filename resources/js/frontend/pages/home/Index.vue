@@ -103,7 +103,7 @@
                         class="product-card"
                         :to="`/products/${item.id}`"
                     >
-                        <img v-if="item.main_image_url" :src="item.main_image_url" :alt="item.product_name" />
+                        <img v-if="imageSrc(item.main_image_url)" :src="imageSrc(item.main_image_url)" :alt="item.product_name" />
                         <div v-else class="cover-fallback"></div>
                         <div>
                             <span>{{ item.brand_name || '名杨科技' }}</span>
@@ -130,6 +130,10 @@ const currentBanner = computed(() => banners.value[bannerIndex.value] || null);
 
 function formatDate(value) {
     return value ? String(value).slice(0, 10) : '';
+}
+
+function imageSrc(url) {
+    return url && !String(url).startsWith('blob:') ? url : '';
 }
 
 onMounted(async () => {

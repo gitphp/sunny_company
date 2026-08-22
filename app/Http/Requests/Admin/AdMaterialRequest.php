@@ -64,7 +64,7 @@ class AdMaterialRequest extends SceneRequest
         return [
             'position_id' => ['required', 'string'],
             'title' => ['required', 'string', 'max:200'],
-            'image_url' => ['required', 'string', 'max:500'],
+            'image_url' => ['required', 'string', 'max:500', 'not_regex:/^blob:/i'],
             'link_url' => ['nullable', 'string', 'max:1000'],
             'target' => ['nullable', 'string', 'in:_blank,_self'],
             'sort_order' => ['nullable', 'integer'],
@@ -84,6 +84,16 @@ class AdMaterialRequest extends SceneRequest
             'title' => '广告标题',
             'image_url' => '广告图片',
             'end_time' => '结束时间',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'image_url.not_regex' => '请重新上传广告图片',
         ];
     }
 }

@@ -169,7 +169,7 @@
 </template>
 
 <script setup>
-import { computed, reactive, ref, watch } from 'vue';
+import { computed, nextTick, reactive, ref, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import { createProduct, fetchProduct, updateProduct } from '../../api/product';
 import { fetchOptionProductBrands, fetchOptionProductCategories, fetchOptionProductSpecs } from '../../api/options';
@@ -294,12 +294,35 @@ function fillMedia(product) {
 async function handleUpload(option, type) {
     try {
         const { data } = await uploadFile(option.file);
-        option.file.url = data.file.file_url;
-        option.onSuccess({ ...data.file, media_type: type });
+        const uploaded = { ...data.file, media_type: type };
+        option.onSuccess(uploaded);
+        await nextTick();
+        replaceUploadedFile(type === 1 ? mainFiles : detailFiles, option.file.uid, uploaded);
     } catch (error) {
         option.onError(error);
         ElMessage.error(error.response?.data?.errors?.file?.[0] || error.response?.data?.message || '上传失败');
     }
+}
+
+function replaceUploadedFile(list, uid, uploaded) {
+    list.value = list.value.map((item) => {
+        if (item.uid !== uid) {
+            return item;
+        }
+
+        return {
+            ...item,
+            name: uploaded.file_name || item.name,
+            url: uploaded.file_url,
+            status: 'success',
+            response: uploaded,
+        };
+    });
+}
+
+function storedUrl(file) {
+    const url = file?.response?.file_url || file?.url || '';
+    return url.startsWith('blob:') ? '' : url;
 }
 
 function addMediaUrl(type) {
@@ -325,7 +348,7 @@ function addMediaUrl(type) {
 }
 
 function previewFile(file) {
-    preview.url = file.url || file.response?.file_url || '';
+    preview.url = storedUrl(file);
     if (preview.url) {
         preview.visible = true;
     }
@@ -340,13 +363,18 @@ function collectMedia() {
 
 function mediaFromList(list, type) {
     return list
-        .filter((item) => item.status === 'success' && (item.url || item.response?.file_url))
         .map((item, index) => {
             const saved = item.response || {};
+            const fileUrl = storedUrl(item);
+
+            if (item.status !== 'success' || !fileUrl) {
+                return null;
+            }
+
             return {
                 id: saved.id || '',
                 media_type: type,
-                file_url: saved.file_url || item.url,
+                file_url: fileUrl,
                 file_name: item.name || saved.file_name || '',
                 file_key: saved.file_key || '',
                 storage_provider: saved.storage_provider || 'local',
@@ -355,7 +383,8 @@ function mediaFromList(list, type) {
                 file_type: saved.file_type || '',
                 sort_order: 100 - index,
             };
-        });
+        })
+        .filter(Boolean);
 }
 
 async function loadOptions() {
