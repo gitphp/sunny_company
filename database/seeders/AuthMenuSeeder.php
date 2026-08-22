@@ -188,7 +188,7 @@ class AuthMenuSeeder extends Seeder
         }
 
         $site = $this->createMenu([
-            'menu_name' => '阳光官网',
+            'menu_name' => '名杨科技官网',
             'menu_icon' => 'Link',
             'menu_path' => '/site',
             'component' => '',

@@ -1,7 +1,7 @@
 <template>
     <div class="login-page">
         <div class="login-card">
-            <h1>阳光管理系统</h1>
+            <h1>名杨科技管理系统</h1>
             <p>Sunny Company Admin</p>
             <el-form ref="formRef" :model="form" :rules="rules" @keyup.enter="submit">
                 <el-form-item prop="account">

@@ -3,7 +3,7 @@
         <aside class="admin-sidebar" :class="{ 'is-collapse': appStore.collapsed }">
             <div class="admin-logo">
                 <span class="logo-mark">阳</span>
-                <span v-show="!appStore.collapsed">阳光管理系统</span>
+                <span v-show="!appStore.collapsed">名杨科技管理系统</span>
             </div>
             <div class="admin-menu-wrap">
                 <el-menu

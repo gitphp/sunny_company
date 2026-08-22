@@ -110,7 +110,7 @@ class RbacSeeder extends Seeder
             $site = AuthMenu::query()->create([
                 'id' => Snowflake::id(),
                 'parent_id' => 0,
-                'menu_name' => '阳光官网',
+                'menu_name' => '名杨科技官网',
                 'menu_icon' => 'Link',
                 'menu_path' => '/site',
                 'component' => '',
@@ -281,7 +281,7 @@ class RbacSeeder extends Seeder
             return $existing;
         }
 
-        $root = $this->createDept('阳光科技', 'ROOT', 0, '0', 1, 90);
+        $root = $this->createDept('名杨科技科技', 'ROOT', 0, '0', 1, 90);
         $sz = $this->createDept('深圳总公司', 'SZ', $root->id, '0,'.$root->id, 2, 80);
         $cs = $this->createDept('长沙分公司', 'CS', $root->id, '0,'.$root->id, 2, 70);
 
@@ -386,12 +386,12 @@ class RbacSeeder extends Seeder
 
         Article::query()->create([
             'id' => Snowflake::id(),
-            'title' => '阳光科技正式上线阳光管理系统',
+            'title' => '名杨科技科技正式上线名杨科技管理系统',
             'subtitle' => '统一后台，提升协同效率',
             'art_cover' => '',
-            'art_content' => '<p>阳光管理系统已正式上线，覆盖用户、角色、部门、岗位与官网内容管理。</p>',
+            'art_content' => '<p>名杨科技管理系统已正式上线，覆盖用户、角色、部门、岗位与官网内容管理。</p>',
             'content_type' => 1,
-            'summary' => '阳光管理系统正式上线，支持组织架构与官网内容一体化管理。',
+            'summary' => '名杨科技管理系统正式上线，支持组织架构与官网内容一体化管理。',
             'category_id' => $category->id,
             'tag_ids' => [],
             'author_id' => $admin->id,
@@ -402,9 +402,9 @@ class RbacSeeder extends Seeder
             'is_top' => 1,
             'is_original' => 1,
             'is_commentable' => 1,
-            'seo_title' => '阳光科技正式上线阳光管理系统',
-            'seo_keywords' => '阳光科技,管理系统',
-            'seo_description' => '阳光管理系统正式上线。',
+            'seo_title' => '名杨科技科技正式上线名杨科技管理系统',
+            'seo_keywords' => '名杨科技科技,管理系统',
+            'seo_description' => '名杨科技管理系统正式上线。',
             'published_at' => now(),
         ]);
     }
@@ -428,13 +428,13 @@ class RbacSeeder extends Seeder
     private function defaultSiteConfigs(): array
     {
         return [
-            ['conf_group' => 'basic', 'conf_key' => 'site_name', 'conf_value' => '阳光科技', 'conf_desc' => '网站名称', 'input_type' => 'text', 'conf_sort' => 90],
+            ['conf_group' => 'basic', 'conf_key' => 'site_name', 'conf_value' => '名杨科技', 'conf_desc' => '网站名称', 'input_type' => 'text', 'conf_sort' => 90],
             ['conf_group' => 'basic', 'conf_key' => 'site_logo', 'conf_value' => '', 'conf_desc' => '网站Logo', 'input_type' => 'image', 'conf_sort' => 80],
             ['conf_group' => 'basic', 'conf_key' => 'site_icp', 'conf_value' => '', 'conf_desc' => '备案号', 'input_type' => 'text', 'conf_sort' => 70],
-            ['conf_group' => 'basic', 'conf_key' => 'site_copyright', 'conf_value' => 'Copyright © 阳光科技', 'conf_desc' => '版权信息', 'input_type' => 'textarea', 'conf_sort' => 60],
-            ['conf_group' => 'seo', 'conf_key' => 'seo_title', 'conf_value' => '阳光科技', 'conf_desc' => 'SEO标题', 'input_type' => 'text', 'conf_sort' => 90],
-            ['conf_group' => 'seo', 'conf_key' => 'seo_keywords', 'conf_value' => '阳光科技,企业管理', 'conf_desc' => 'SEO关键词', 'input_type' => 'text', 'conf_sort' => 80],
-            ['conf_group' => 'seo', 'conf_key' => 'seo_description', 'conf_value' => '阳光科技官方网站', 'conf_desc' => 'SEO描述', 'input_type' => 'textarea', 'conf_sort' => 70],
+            ['conf_group' => 'basic', 'conf_key' => 'site_copyright', 'conf_value' => 'Copyright © 名杨科技', 'conf_desc' => '版权信息', 'input_type' => 'textarea', 'conf_sort' => 60],
+            ['conf_group' => 'seo', 'conf_key' => 'seo_title', 'conf_value' => '名杨科技', 'conf_desc' => 'SEO标题', 'input_type' => 'text', 'conf_sort' => 90],
+            ['conf_group' => 'seo', 'conf_key' => 'seo_keywords', 'conf_value' => '名杨科技,企业管理', 'conf_desc' => 'SEO关键词', 'input_type' => 'text', 'conf_sort' => 80],
+            ['conf_group' => 'seo', 'conf_key' => 'seo_description', 'conf_value' => '名杨科技官方网站', 'conf_desc' => 'SEO描述', 'input_type' => 'textarea', 'conf_sort' => 70],
             ['conf_group' => 'contact', 'conf_key' => 'contact_name', 'conf_value' => '', 'conf_desc' => '联系人', 'input_type' => 'text', 'conf_sort' => 90],
             ['conf_group' => 'contact', 'conf_key' => 'contact_phone', 'conf_value' => '', 'conf_desc' => '联系电话', 'input_type' => 'text', 'conf_sort' => 80],
             ['conf_group' => 'contact', 'conf_key' => 'contact_email', 'conf_value' => '', 'conf_desc' => '联系邮箱', 'input_type' => 'text', 'conf_sort' => 70],
@@ -496,7 +496,7 @@ class RbacSeeder extends Seeder
         AdMaterial::query()->create([
             'id' => Snowflake::id(),
             'position_id' => $banner->id,
-            'title' => '阳光管理系统上线',
+            'title' => '名杨科技管理系统上线',
             'image_url' => '',
             'link_url' => '/admin',
             'target' => '_self',
