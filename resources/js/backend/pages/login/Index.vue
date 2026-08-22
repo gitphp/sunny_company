@@ -18,9 +18,6 @@
                     <el-button type="primary" size="large" style="width:100%" :loading="loading" @click="submit">登 录</el-button>
                 </el-form-item>
             </el-form>
-            <div style="text-align:center;">
-                <el-link href="/" type="info">返回前台</el-link>
-            </div>
         </div>
     </div>
 </template>

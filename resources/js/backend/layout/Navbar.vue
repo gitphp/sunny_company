@@ -24,8 +24,7 @@
                 </span>
                 <template #dropdown>
                     <el-dropdown-menu>
-                        <el-dropdown-item command="frontend">前台首页</el-dropdown-item>
-                        <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
+                        <el-dropdown-item command="logout">退出登录</el-dropdown-item>
                     </el-dropdown-menu>
                 </template>
             </el-dropdown>
@@ -56,11 +55,6 @@ function toggleFullscreen() {
 }
 
 async function onCommand(command) {
-    if (command === 'frontend') {
-        window.location.href = '/';
-        return;
-    }
-
     if (command === 'logout') {
         await ElMessageBox.confirm('确定注销并退出系统吗？', '提示', { type: 'warning' });
         await userStore.logout();

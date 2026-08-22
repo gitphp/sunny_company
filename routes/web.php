@@ -7,18 +7,9 @@ use App\Http\Controllers\Admin\OptionController;
 use App\Http\Controllers\Admin\PermissionController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('api')->group(function () {
-    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
-    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
-
-    Route::middleware('auth')->group(function () {
-        Route::post('/logout', [AuthController::class, 'logout']);
-        Route::get('/user', [AuthController::class, 'user']);
-    });
-
     Route::prefix('admin')->group(function () {
         Route::post('/login', [AdminAuthController::class, 'login'])->middleware('throttle:10,1');
 
@@ -59,5 +50,8 @@ Route::prefix('api')->group(function () {
     });
 });
 
+Route::redirect('/', '/admin');
+Route::redirect('/login', '/admin/login');
+Route::redirect('/dashboard', '/admin/index');
+Route::redirect('/register', '/admin/login');
 Route::view('/admin/{any?}', 'backend')->where('any', '.*');
-Route::view('/{any?}', 'frontend')->where('any', '.*');

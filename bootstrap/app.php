@@ -17,17 +17,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => EnsurePermission::class,
         ]);
 
-        $middleware->redirectGuestsTo(function (Request $request): string {
-            return $request->is('admin') || $request->is('admin/*') || $request->is('api/admin/*')
-                ? '/admin/login'
-                : '/login';
-        });
-
-        $middleware->redirectUsersTo(function (Request $request): string {
-            return $request->is('admin') || $request->is('admin/*')
-                ? '/admin/index'
-                : '/dashboard';
-        });
+        $middleware->redirectGuestsTo('/admin/login');
+        $middleware->redirectUsersTo('/admin/index');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(function (Request $request, Throwable $e): bool {
