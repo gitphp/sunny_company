@@ -3,15 +3,16 @@
 /**
  * 前台留言控制器
  *
- * @package     App\Http\Controllers
+ * @package     App\Http\Controllers\Frontend
  * @license     MIT License (MIT)
  * @author      yang song <githup@163.com> QQ4873473
  * @copyright   Copyright (c) 2024 YourCompany. All rights reserved.
  * @link        http://www.budff.com
  */
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Frontend;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\FeedbackRequest;
 use App\Services\FeedbackService;
 use Illuminate\Http\JsonResponse;

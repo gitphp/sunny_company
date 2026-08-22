@@ -10,7 +10,6 @@
  * @link        http://www.budff.com
  */
 
-use App\Http\Controllers\AdController;
 use App\Http\Controllers\Admin\AdMaterialController;
 use App\Http\Controllers\Admin\AdPositionController;
 use App\Http\Controllers\Admin\AiController;
@@ -36,16 +35,24 @@ use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SiteConfigController;
 use App\Http\Controllers\Admin\UploadController;
 use App\Http\Controllers\Admin\UserController;
-use App\Http\Controllers\FeedbackController as PublicFeedbackController;
-use App\Http\Controllers\JobController as PublicJobController;
-use App\Http\Controllers\ProductController as PublicProductController;
+use App\Http\Controllers\Frontend\AdController;
+use App\Http\Controllers\Frontend\ArticleController as PublicArticleController;
+use App\Http\Controllers\Frontend\FeedbackController as PublicFeedbackController;
+use App\Http\Controllers\Frontend\HomeController;
+use App\Http\Controllers\Frontend\JobController as PublicJobController;
+use App\Http\Controllers\Frontend\ProductController as PublicProductController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('api')->group(function () {
     Route::post('/feedbacks', [PublicFeedbackController::class, 'store'])->middleware('throttle:8,1');
+    Route::get('/site', [HomeController::class, 'site']);
+    Route::get('/home', [HomeController::class, 'index']);
     Route::get('/ads/{code}', [AdController::class, 'show']);
     Route::get('/jobs', [PublicJobController::class, 'index']);
     Route::get('/jobs/{job}', [PublicJobController::class, 'show']);
+    Route::get('/articles', [PublicArticleController::class, 'index']);
+    Route::get('/articles/{article}', [PublicArticleController::class, 'show']);
+    Route::get('/product-categories', [PublicProductController::class, 'categories']);
     Route::get('/products', [PublicProductController::class, 'index']);
     Route::get('/products/{product}', [PublicProductController::class, 'show']);
 
@@ -195,8 +202,9 @@ Route::prefix('api')->group(function () {
     });
 });
 
-Route::redirect('/', '/admin');
 Route::redirect('/login', '/admin/login');
 Route::redirect('/dashboard', '/admin/index');
 Route::redirect('/register', '/admin/login');
 Route::view('/admin/{any?}', 'backend')->where('any', '.*');
+
+require __DIR__.'/frontend.php';

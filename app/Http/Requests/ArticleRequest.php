@@ -1,7 +1,7 @@
 <?php
 
 /**
- * 商品表单请求
+ * 前台文章表单请求
  *
  * @package     App\Http\Requests
  * @license     MIT License (MIT)
@@ -12,7 +12,7 @@
 
 namespace App\Http\Requests;
 
-class ProductRequest extends SceneRequest
+class ArticleRequest extends SceneRequest
 {
     /**
      * @return array<string, mixed>
@@ -22,9 +22,9 @@ class ProductRequest extends SceneRequest
         return [
             'keyword' => ['nullable', 'string', 'max:64'],
             'category_id' => ['nullable', 'string'],
-            'brand_id' => ['nullable', 'string'],
+            'category_url' => ['nullable', 'string', 'max:64'],
             'page' => ['nullable', 'integer', 'min:1'],
-            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:50'],
         ];
     }
 
@@ -32,14 +32,6 @@ class ProductRequest extends SceneRequest
      * @return array<string, mixed>
      */
     public function showRules(): array
-    {
-        return [];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function categoriesRules(): array
     {
         return [];
     }

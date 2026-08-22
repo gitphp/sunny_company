@@ -30,6 +30,18 @@ class ProductCategoryService
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    public function publicTree(): array
+    {
+        return [
+            'categories' => ProductCategory::buildTree(
+                ProductCategory::query()->where('cat_status', 1)->orderByDesc('sort_order')->orderBy('id')->get()
+            ),
+        ];
+    }
+
+    /**
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */

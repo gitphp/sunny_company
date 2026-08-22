@@ -474,25 +474,56 @@ class RbacSeeder extends Seeder
 
     private function seedSampleArticle(): void
     {
-        if (Article::query()->exists()) {
+        $admin = User::query()->where('user_name', 'admin')->first();
+
+        if (! $admin) {
             return;
         }
 
-        $admin = User::query()->where('user_name', 'admin')->first();
-        $category = ArticleCategory::query()->where('cat_url', 'company-news')->first();
+        $this->ensureSampleArticle(
+            $admin,
+            'company-news',
+            '名杨科技管理系统正式上线',
+            '统一后台，提升协同效率',
+            '名杨科技管理系统正式上线，支持组织架构与官网内容一体化管理。',
+            '<p>名杨科技管理系统已正式上线，覆盖用户、角色、部门、岗位与官网内容管理，帮助团队把日常协作收拢到同一套流程里。</p>',
+            1,
+        );
 
-        if (! $admin || ! $category) {
+        $this->ensureSampleArticle(
+            $admin,
+            'industry',
+            '家居行业向绿色材料与智能制造加速迈进',
+            '材料、工艺与体验正在被重新定义',
+            '绿色材料、柔性生产和更完整的交付体验，正在成为家居制造的新主线。',
+            '<p>行业正从规模扩张转向品质与可持续。企业更关注材料来源、结构寿命，以及产品进入空间后的真实使用体验。</p><p>名杨科技持续跟进这一趋势，把工艺沉淀落实到每一件产品上。</p>',
+            0,
+        );
+    }
+
+    private function ensureSampleArticle(
+        User $admin,
+        string $categoryUrl,
+        string $title,
+        string $subtitle,
+        string $summary,
+        string $content,
+        int $isTop,
+    ): void {
+        $category = ArticleCategory::query()->where('cat_url', $categoryUrl)->first();
+
+        if (! $category || Article::query()->where('title', $title)->exists()) {
             return;
         }
 
         Article::query()->create([
             'id' => Snowflake::id(),
-            'title' => '名杨科技科技正式上线名杨科技管理系统',
-            'subtitle' => '统一后台，提升协同效率',
+            'title' => $title,
+            'subtitle' => $subtitle,
             'art_cover' => '',
-            'art_content' => '<p>名杨科技管理系统已正式上线，覆盖用户、角色、部门、岗位与官网内容管理。</p>',
+            'art_content' => $content,
             'content_type' => 1,
-            'summary' => '名杨科技管理系统正式上线，支持组织架构与官网内容一体化管理。',
+            'summary' => $summary,
             'category_id' => $category->id,
             'tag_ids' => [],
             'author_id' => $admin->id,
@@ -500,12 +531,12 @@ class RbacSeeder extends Seeder
             'source' => '原创',
             'source_url' => '',
             'art_status' => 4,
-            'is_top' => 1,
+            'is_top' => $isTop,
             'is_original' => 1,
             'is_commentable' => 1,
-            'seo_title' => '名杨科技科技正式上线名杨科技管理系统',
-            'seo_keywords' => '名杨科技科技,管理系统',
-            'seo_description' => '名杨科技管理系统正式上线。',
+            'seo_title' => $title,
+            'seo_keywords' => '名杨科技',
+            'seo_description' => $summary,
             'published_at' => now(),
         ]);
     }
@@ -533,13 +564,14 @@ class RbacSeeder extends Seeder
             ['conf_group' => 'basic', 'conf_key' => 'site_logo', 'conf_value' => '', 'conf_desc' => '网站Logo', 'input_type' => 'image', 'conf_sort' => 80],
             ['conf_group' => 'basic', 'conf_key' => 'site_icp', 'conf_value' => '', 'conf_desc' => '备案号', 'input_type' => 'text', 'conf_sort' => 70],
             ['conf_group' => 'basic', 'conf_key' => 'site_copyright', 'conf_value' => 'Copyright © 名杨科技', 'conf_desc' => '版权信息', 'input_type' => 'textarea', 'conf_sort' => 60],
+            ['conf_group' => 'basic', 'conf_key' => 'about_intro', 'conf_value' => '名杨科技专注家居与智能办公产品的设计与制造。我们以材料、结构与工艺为根基，持续打磨每一件产品的耐用度与使用体验，服务企业空间与家庭生活。', 'conf_desc' => '关于我们简介', 'input_type' => 'textarea', 'conf_sort' => 50],
             ['conf_group' => 'seo', 'conf_key' => 'seo_title', 'conf_value' => '名杨科技', 'conf_desc' => 'SEO标题', 'input_type' => 'text', 'conf_sort' => 90],
             ['conf_group' => 'seo', 'conf_key' => 'seo_keywords', 'conf_value' => '名杨科技,企业管理', 'conf_desc' => 'SEO关键词', 'input_type' => 'text', 'conf_sort' => 80],
             ['conf_group' => 'seo', 'conf_key' => 'seo_description', 'conf_value' => '名杨科技官方网站', 'conf_desc' => 'SEO描述', 'input_type' => 'textarea', 'conf_sort' => 70],
-            ['conf_group' => 'contact', 'conf_key' => 'contact_name', 'conf_value' => '', 'conf_desc' => '联系人', 'input_type' => 'text', 'conf_sort' => 90],
-            ['conf_group' => 'contact', 'conf_key' => 'contact_phone', 'conf_value' => '', 'conf_desc' => '联系电话', 'input_type' => 'text', 'conf_sort' => 80],
-            ['conf_group' => 'contact', 'conf_key' => 'contact_email', 'conf_value' => '', 'conf_desc' => '联系邮箱', 'input_type' => 'text', 'conf_sort' => 70],
-            ['conf_group' => 'contact', 'conf_key' => 'contact_address', 'conf_value' => '', 'conf_desc' => '公司地址', 'input_type' => 'textarea', 'conf_sort' => 60],
+            ['conf_group' => 'contact', 'conf_key' => 'contact_name', 'conf_value' => '名杨科技', 'conf_desc' => '联系人', 'input_type' => 'text', 'conf_sort' => 90],
+            ['conf_group' => 'contact', 'conf_key' => 'contact_phone', 'conf_value' => '400-800-1668', 'conf_desc' => '联系电话', 'input_type' => 'text', 'conf_sort' => 80],
+            ['conf_group' => 'contact', 'conf_key' => 'contact_email', 'conf_value' => 'hello@mingyang.cn', 'conf_desc' => '联系邮箱', 'input_type' => 'text', 'conf_sort' => 70],
+            ['conf_group' => 'contact', 'conf_key' => 'contact_address', 'conf_value' => '广东省深圳市南山区科技园', 'conf_desc' => '公司地址', 'input_type' => 'textarea', 'conf_sort' => 60],
             ['conf_group' => 'social', 'conf_key' => 'social_wechat', 'conf_value' => '', 'conf_desc' => '微信', 'input_type' => 'text', 'conf_sort' => 90],
             ['conf_group' => 'social', 'conf_key' => 'social_weibo', 'conf_value' => '', 'conf_desc' => '微博', 'input_type' => 'text', 'conf_sort' => 80],
             ['conf_group' => 'social', 'conf_key' => 'social_douyin', 'conf_value' => '', 'conf_desc' => '抖音', 'input_type' => 'text', 'conf_sort' => 70],

@@ -1,15 +1,14 @@
-<?php
-
+<!--
 /**
- * 前台页面路由
+ * 前台根组件
  *
- * @package     Routes
+ * @package     Resources\Js\Frontend
  * @license     MIT License (MIT)
  * @author      yang song <githup@163.com> QQ4873473
  * @copyright   Copyright (c) 2024 YourCompany. All rights reserved.
  * @link        http://www.budff.com
  */
-
-use Illuminate\Support\Facades\Route;
-
-Route::view('/{any?}', 'frontend')->where('any', '.*');
+-->
+<template>
+    <router-view />
+</template>

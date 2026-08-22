@@ -43,6 +43,28 @@ class FriendLinkService
     }
 
     /**
+     * @return array<string, mixed>
+     */
+    public function publicList(): array
+    {
+        $links = FriendLink::query()
+            ->where('link_status', 1)
+            ->orderBy('link_sort')
+            ->orderBy('id')
+            ->get();
+
+        return [
+            'links' => $links->map(fn (FriendLink $link) => [
+                'id' => (string) $link->id,
+                'link_name' => $link->link_name,
+                'link_url' => $link->link_url,
+                'link_logo' => $link->link_logo,
+                'link_desc' => $link->link_desc,
+            ])->values(),
+        ];
+    }
+
+    /**
      * @param  array<string, mixed>  $data
      * @return array<string, mixed>
      */

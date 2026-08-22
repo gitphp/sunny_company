@@ -17,6 +17,7 @@ use App\Models\Article;
 use App\Models\ArticleCategory;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -148,6 +149,112 @@ class ArticleService
             'message' => '状态已更新',
             'article' => $this->transform($article->fresh()->load('category:id,cat_name')),
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
+     */
+    public function publicPaginate(array $filters): array
+    {
+        $paginator = $this->publicQuery($filters)
+            ->with('category:id,cat_name,cat_url')
+            ->orderByDesc('is_top')
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
+            ->paginate((int) ($filters['per_page'] ?? 10));
+
+        return [
+            'data' => collect($paginator->items())->map(fn (Article $article) => $this->transform($article))->values(),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function publicFind(string $id): array
+    {
+        $article = Article::query()
+            ->with('category:id,cat_name,cat_url')
+            ->where('art_status', ArticleStatus::Published)
+            ->find($id);
+
+        if (! $article) {
+            throw (new ModelNotFoundException)->setModel(Article::class, [$id]);
+        }
+
+        return [
+            'article' => $this->transform($article, true),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function latestByCategoryUrl(string $url, int $limit = 5): array
+    {
+        $category = ArticleCategory::query()
+            ->where('cat_url', $url)
+            ->where('status', 1)
+            ->first();
+
+        if (! $category) {
+            return [
+                'category' => null,
+                'data' => [],
+            ];
+        }
+
+        $items = Article::query()
+            ->select($this->listColumns())
+            ->with('category:id,cat_name,cat_url')
+            ->where('art_status', ArticleStatus::Published)
+            ->whereIn('category_id', ArticleCategory::selfAndDescendantIds((string) $category->id))
+            ->orderByDesc('is_top')
+            ->orderByDesc('published_at')
+            ->orderByDesc('id')
+            ->limit($limit)
+            ->get();
+
+        return [
+            'category' => [
+                'id' => (string) $category->id,
+                'cat_name' => $category->cat_name,
+                'cat_url' => $category->cat_url,
+            ],
+            'data' => $items->map(fn (Article $article) => $this->transform($article))->values(),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     */
+    private function publicQuery(array $filters): Builder
+    {
+        $query = Article::query()
+            ->select($this->listColumns())
+            ->where('art_status', ArticleStatus::Published)
+            ->when(($filters['keyword'] ?? '') !== '', fn (Builder $query) => $query->where('title', 'like', '%'.$filters['keyword'].'%'));
+
+        $url = (string) ($filters['category_url'] ?? '');
+        $categoryId = (string) ($filters['category_id'] ?? '');
+
+        if ($url !== '') {
+            $category = ArticleCategory::query()->where('cat_url', $url)->where('status', 1)->first();
+            $categoryId = $category ? (string) $category->id : '0';
+        }
+
+        if ($categoryId !== '' && $categoryId !== '0') {
+            $query->whereIn('category_id', ArticleCategory::selfAndDescendantIds($categoryId));
+        }
+
+        return $query;
     }
 
     /**

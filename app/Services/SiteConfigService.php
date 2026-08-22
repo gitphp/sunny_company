@@ -46,6 +46,19 @@ class SiteConfigService
     }
 
     /**
+     * @return array<string, string>
+     */
+    public function publicValues(): array
+    {
+        return SiteConfig::query()
+            ->get(['conf_key', 'conf_value'])
+            ->mapWithKeys(fn (SiteConfig $config): array => [
+                $config->conf_key => (string) ($config->conf_value ?? ''),
+            ])
+            ->all();
+    }
+
+    /**
      * @param  array<string, mixed>  $values
      * @return array<string, mixed>
      */
