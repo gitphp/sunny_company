@@ -12,13 +12,13 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessException;
 use App\Models\ProductSkuSpecValue;
 use App\Models\ProductSpecification;
 use App\Models\ProductSpecificationValue;
 use App\Support\SerialCode;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class ProductSpecificationService
 {
@@ -101,9 +101,7 @@ class ProductSpecificationService
         $spec = ProductSpecification::query()->findOrFail($id);
 
         if (ProductSkuSpecValue::query()->where('spec_id', $id)->exists()) {
-            throw ValidationException::withMessages([
-                'id' => ['该规格已被商品 SKU 使用，无法删除'],
-            ]);
+            BusinessException::fail('该规格已被商品 SKU 使用，无法删除', 'id');
         }
 
         $spec->values()->each(function (ProductSpecificationValue $value) use ($operatorId): void {
@@ -180,9 +178,7 @@ class ProductSpecificationService
         $value = ProductSpecificationValue::query()->findOrFail($id);
 
         if ($value->skuLinks()->exists()) {
-            throw ValidationException::withMessages([
-                'id' => ['该规格值已被商品 SKU 使用，无法删除'],
-            ]);
+            BusinessException::fail('该规格值已被商品 SKU 使用，无法删除', 'id');
         }
 
         $value->deleted_by = $operatorId ?: null;
@@ -214,9 +210,7 @@ class ProductSpecificationService
         $name = trim((string) ($data['value'] ?? ''));
 
         if ($name === '') {
-            throw ValidationException::withMessages([
-                'value' => ['请填写规格值'],
-            ]);
+            BusinessException::fail('请填写规格值', 'value');
         }
 
         $value = new ProductSpecificationValue([

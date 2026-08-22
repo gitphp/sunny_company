@@ -13,6 +13,7 @@
 namespace App\Services;
 
 use App\Enums\ProductMediaType;
+use App\Exceptions\BusinessException;
 use App\Models\Product;
 use App\Models\ProductBrand;
 use App\Models\ProductCategory;
@@ -24,7 +25,6 @@ use App\Support\SerialCode;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class ProductService
 {
@@ -277,17 +277,13 @@ class ProductService
         }
 
         if (trim((string) ($data['product_name'] ?? '')) === '') {
-            throw ValidationException::withMessages([
-                'product_name' => ['上架商品必须填写名称'],
-            ]);
+            BusinessException::fail('上架商品必须填写名称', 'product_name');
         }
 
         $categoryId = (string) ($data['category_id'] ?? '0');
 
         if ($categoryId === '' || $categoryId === '0') {
-            throw ValidationException::withMessages([
-                'category_id' => ['上架商品必须选择分类'],
-            ]);
+            BusinessException::fail('上架商品必须选择分类', 'category_id');
         }
     }
 
@@ -304,9 +300,7 @@ class ProductService
             $signature = $this->specSignature($specValueIds);
 
             if (isset($signatures[$signature])) {
-                throw ValidationException::withMessages([
-                    'skus' => ['存在重复的规格组合'],
-                ]);
+                BusinessException::fail('存在重复的规格组合', 'skus');
             }
 
             $signatures[$signature] = true;
@@ -385,9 +379,7 @@ class ProductService
             ->exists();
 
         if ($exists) {
-            throw ValidationException::withMessages([
-                'skus' => ['SKU 编码 '.$code.' 已存在'],
-            ]);
+            BusinessException::fail('SKU 编码 '.$code.' 已存在', 'skus');
         }
     }
 
@@ -515,9 +507,7 @@ class ProductService
             $type = (int) ($row['media_type'] ?? ProductMediaType::DetailImage->value);
 
             if (ProductMediaType::tryFrom($type) === null) {
-                throw ValidationException::withMessages([
-                    'media' => ['媒体类型无效'],
-                ]);
+                BusinessException::fail('媒体类型无效', 'media');
             }
 
             $media->fill([

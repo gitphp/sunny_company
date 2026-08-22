@@ -12,11 +12,11 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessException;
 use App\Models\ProductBrand;
 use App\Support\SerialCode;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class ProductBrandService
 {
@@ -94,15 +94,11 @@ class ProductBrandService
         $brand = ProductBrand::query()->findOrFail($id);
 
         if ((int) $brand->is_system === 1) {
-            throw ValidationException::withMessages([
-                'id' => ['系统预设品牌不可删除'],
-            ]);
+            BusinessException::fail('系统预设品牌不可删除', 'id');
         }
 
         if ($brand->products()->exists()) {
-            throw ValidationException::withMessages([
-                'id' => ['该品牌下仍有商品，无法删除'],
-            ]);
+            BusinessException::fail('该品牌下仍有商品，无法删除', 'id');
         }
 
         $brand->deleted_by = $operatorId ?: null;

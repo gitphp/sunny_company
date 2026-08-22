@@ -12,10 +12,13 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessException;
+use App\Exceptions\SystemException;
 use App\Models\AiProvider;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
@@ -31,17 +34,13 @@ class AiChatService
         $response = $this->request($provider, $this->messages($provider, $data['messages'] ?? []), false);
 
         if (! $response->successful()) {
-            throw ValidationException::withMessages([
-                'messages' => [$this->errorMessage($response)],
-            ]);
+            $this->throwRemoteError($response);
         }
 
         $content = (string) data_get($response->json(), 'choices.0.message.content', '');
 
         if ($content === '') {
-            throw ValidationException::withMessages([
-                'messages' => ['模型未返回内容，请检查配置或稍后重试'],
-            ]);
+            BusinessException::fail('模型未返回内容，请检查配置或稍后重试', 'messages');
         }
 
         return [
@@ -64,6 +63,16 @@ class AiChatService
                 $response = $this->request($provider, $messages, true);
 
                 if (! $response->successful()) {
+                    if ($response->serverError()) {
+                        Log::error('AI 模型接口失败', [
+                            'status' => $response->status(),
+                            'body' => $this->errorMessage($response),
+                        ]);
+                        $this->emit(['error' => '系统繁忙，请稍后重试']);
+
+                        return;
+                    }
+
                     $this->emit(['error' => $this->errorMessage($response)]);
 
                     return;
@@ -80,8 +89,11 @@ class AiChatService
 
                     flush();
                 }
+            } catch (BusinessException $exception) {
+                $this->emit(['error' => $exception->getMessage()]);
             } catch (Throwable $exception) {
-                $this->emit(['error' => $exception->getMessage() ?: '对话失败']);
+                Log::error('AI 流式对话失败', ['exception' => $exception]);
+                $this->emit(['error' => '系统繁忙，请稍后重试']);
             }
         }, 200, [
             'Content-Type' => 'text/event-stream; charset=utf-8',
@@ -123,24 +135,18 @@ class AiChatService
         }
 
         if (! $provider) {
-            throw ValidationException::withMessages([
-                'provider_id' => ['请先配置并启用一个模型'],
-            ]);
+            BusinessException::fail('请先配置并启用一个模型', 'provider_id');
         }
 
         $key = (string) $provider->getRawOriginal('api_key');
         $local = str_contains($provider->base_url, '127.0.0.1') || str_contains($provider->base_url, 'localhost');
 
         if ($key === '' && ! $local) {
-            throw ValidationException::withMessages([
-                'provider_id' => ['请先为「'.$provider->provider_name.'」填写 API Key'],
-            ]);
+            BusinessException::fail('请先为「'.$provider->provider_name.'」填写 API Key', 'provider_id');
         }
 
         if (trim((string) $provider->base_url) === '' || trim((string) $provider->model) === '') {
-            throw ValidationException::withMessages([
-                'provider_id' => ['请完善接口地址和模型名称'],
-            ]);
+            BusinessException::fail('请完善接口地址和模型名称', 'provider_id');
         }
 
         return $provider;
@@ -169,9 +175,7 @@ class AiChatService
         }
 
         if ($normalized === []) {
-            throw ValidationException::withMessages([
-                'messages' => ['请输入对话内容'],
-            ]);
+            BusinessException::fail('请输入对话内容', 'messages');
         }
 
         if (trim((string) $provider->system_prompt) !== '' && ($normalized[0]['role'] ?? '') !== 'system') {
@@ -189,24 +193,28 @@ class AiChatService
      */
     private function request(AiProvider $provider, array $messages, bool $stream): Response
     {
-        $request = Http::acceptJson()
-            ->timeout(120)
-            ->connectTimeout(15)
-            ->withHeaders([
-                'Authorization' => 'Bearer '.(string) $provider->getRawOriginal('api_key'),
+        try {
+            $request = Http::acceptJson()
+                ->timeout(120)
+                ->connectTimeout(15)
+                ->withHeaders([
+                    'Authorization' => 'Bearer '.(string) $provider->getRawOriginal('api_key'),
+                ]);
+
+            if ($stream) {
+                $request = $request->withOptions(['stream' => true]);
+            }
+
+            return $request->post($this->chatUrl((string) $provider->base_url), [
+                'model' => $provider->model,
+                'messages' => $messages,
+                'temperature' => (float) $provider->temperature,
+                'max_tokens' => (int) $provider->max_tokens,
+                'stream' => $stream,
             ]);
-
-        if ($stream) {
-            $request = $request->withOptions(['stream' => true]);
+        } catch (ConnectionException $exception) {
+            SystemException::fail('模型服务暂时不可用', $exception);
         }
-
-        return $request->post($this->chatUrl((string) $provider->base_url), [
-            'model' => $provider->model,
-            'messages' => $messages,
-            'temperature' => (float) $provider->temperature,
-            'max_tokens' => (int) $provider->max_tokens,
-            'stream' => $stream,
-        ]);
     }
 
     private function chatUrl(string $baseUrl): string
@@ -222,6 +230,15 @@ class AiChatService
         }
 
         return $url.'/v1/chat/completions';
+    }
+
+    private function throwRemoteError(Response $response): never
+    {
+        if ($response->serverError()) {
+            SystemException::fail($this->errorMessage($response));
+        }
+
+        BusinessException::fail($this->errorMessage($response), 'messages');
     }
 
     private function errorMessage(Response $response): string

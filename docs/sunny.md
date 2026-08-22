@@ -262,6 +262,22 @@ RBAC 已经接上，角色、权限、部门、用户分配都打通了。
 
 —————————————————————————————————————————————————————————————————————————————————————
 
+异常处理和日志已经按规范接上，接口对前台/后台仍返回可读的 `message`。
+
+**异常分类**
+- `BusinessException`：可预知业务错误（库存不足、不能删自己等），HTTP 422，返回友好文案；带字段时仍给 `errors`，登录页不用改。
+- `SystemException`：技术错误（存盘失败、模型服务连不上），记 error 日志，对外统一 500「系统繁忙，请稍后重试」。
+
+**全局处理**
+- `App\Exceptions\Handler::render()`：`/api/*` 或 `Accept: application/json` 返回 JSON，否则渲染 `errors/business`、`errors/500` 页面。
+- 表单校验仍走 Laravel 的 `ValidationException`；Service 里的业务规则已从校验异常改成 `BusinessException`。
+
+**日志**
+- 默认通道改为 **daily**（按日切割，保留 14 天）。
+- 级别仍是 `emergency` → `debug`。
+- 登录成功/失败、退出、后台创建用户会写 **INFO/WARNING**。项目里还没有支付模块，支付日志可在接入时按同样方式补。
+
+关键操作可在 `storage/logs/laravel-YYYY-MM-DD.log` 里查。
 
 —————————————————————————————————————————————————————————————————————————————————————
 

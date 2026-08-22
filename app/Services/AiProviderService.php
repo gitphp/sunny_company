@@ -12,10 +12,10 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessException;
 use App\Models\AiProvider;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class AiProviderService
 {
@@ -108,9 +108,7 @@ class AiProviderService
         $provider = AiProvider::query()->findOrFail($id);
 
         if ($provider->is_default && AiProvider::query()->where('status', 1)->where('id', '!=', $id)->doesntExist()) {
-            throw ValidationException::withMessages([
-                'id' => ['请至少保留一个可用模型'],
-            ]);
+            BusinessException::fail('请至少保留一个可用模型', 'id');
         }
 
         $provider->delete();
@@ -151,9 +149,7 @@ class AiProviderService
         $provider = AiProvider::query()->findOrFail($id);
 
         if ((int) $provider->status !== 1) {
-            throw ValidationException::withMessages([
-                'id' => ['请先启用该模型再设为默认'],
-            ]);
+            BusinessException::fail('请先启用该模型再设为默认', 'id');
         }
 
         DB::transaction(function () use ($provider): void {
@@ -176,9 +172,7 @@ class AiProviderService
         $apiKey = trim((string) ($data['api_key'] ?? ''));
 
         if ($creating && $apiKey === '' && ! $this->isLocal((string) ($data['base_url'] ?? ''))) {
-            throw ValidationException::withMessages([
-                'api_key' => ['请填写接口密钥'],
-            ]);
+            BusinessException::fail('请填写接口密钥', 'api_key');
         }
 
         if (! $creating && ($apiKey === '' || str_contains($apiKey, '*'))) {

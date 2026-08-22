@@ -12,9 +12,10 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessException;
+use App\Exceptions\SystemException;
 use App\Support\Snowflake;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Validation\ValidationException;
 
 class UploadService
 {
@@ -31,9 +32,7 @@ class UploadService
         $path = $file->storeAs($directory, $filename, 'public');
 
         if ($path === false) {
-            throw ValidationException::withMessages([
-                'file' => ['文件保存失败'],
-            ]);
+            SystemException::fail('文件保存失败');
         }
 
         return [
@@ -63,18 +62,14 @@ class UploadService
 
         if ($imageOnly) {
             if (! in_array($extension, $images, true) && ! str_starts_with($mime, 'image/')) {
-                throw ValidationException::withMessages([
-                    'file' => ['请上传 jpg / png / gif / webp 图片'],
-                ]);
+                BusinessException::fail('请上传 jpg / png / gif / webp 图片', 'file');
             }
 
             return;
         }
 
         if (! in_array($extension, $allowed, true) && ! str_starts_with($mime, 'image/')) {
-            throw ValidationException::withMessages([
-                'file' => ['不支持的文件类型'],
-            ]);
+            BusinessException::fail('不支持的文件类型', 'file');
         }
     }
 }

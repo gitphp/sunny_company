@@ -12,9 +12,9 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessException;
 use App\Models\HrPost;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class PostService
 {
@@ -60,9 +60,7 @@ class PostService
             $parentId = $this->parentId($data);
 
             if ($this->isSelfOrDescendant($post, $parentId)) {
-                throw ValidationException::withMessages([
-                    'parent_id' => ['不能选择自己或下级作为父岗位'],
-                ]);
+                BusinessException::fail('不能选择自己或下级作为父岗位', 'parent_id');
             }
 
             $post->fill($this->payload($data));
@@ -86,15 +84,11 @@ class PostService
         $post = HrPost::query()->findOrFail($id);
 
         if ($post->children()->exists()) {
-            throw ValidationException::withMessages([
-                'id' => ['请先删除下级岗位'],
-            ]);
+            BusinessException::fail('请先删除下级岗位', 'id');
         }
 
         if ($post->users()->exists()) {
-            throw ValidationException::withMessages([
-                'id' => ['该岗位仍有用户，无法删除'],
-            ]);
+            BusinessException::fail('该岗位仍有用户，无法删除', 'id');
         }
 
         $post->delete();

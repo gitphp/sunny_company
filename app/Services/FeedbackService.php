@@ -13,10 +13,10 @@
 namespace App\Services;
 
 use App\Enums\FeedbackStatus;
+use App\Exceptions\BusinessException;
 use App\Models\Feedback;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class FeedbackService
 {
@@ -95,9 +95,7 @@ class FeedbackService
         $reply = trim((string) ($data['reply_content'] ?? ''));
 
         if ($reply === '') {
-            throw ValidationException::withMessages([
-                'reply_content' => ['请填写回复内容'],
-            ]);
+            BusinessException::fail('请填写回复内容', 'reply_content');
         }
 
         $feedback = DB::transaction(function () use ($id, $reply): Feedback {

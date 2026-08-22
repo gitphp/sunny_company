@@ -13,13 +13,13 @@
 namespace App\Services;
 
 use App\Enums\ArticleStatus;
+use App\Exceptions\BusinessException;
 use App\Models\Article;
 use App\Models\ArticleCategory;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class ArticleService
 {
@@ -336,24 +336,18 @@ class ArticleService
     {
         if ($status !== ArticleStatus::Published->value) {
             if ($status === ArticleStatus::Rejected->value && trim((string) ($data['reject_reason'] ?? '')) === '') {
-                throw ValidationException::withMessages([
-                    'reject_reason' => ['驳回时请填写原因'],
-                ]);
+                BusinessException::fail('驳回时请填写原因', 'reject_reason');
             }
 
             return;
         }
 
         if (trim((string) ($data['title'] ?? '')) === '') {
-            throw ValidationException::withMessages([
-                'title' => ['发布文章必须填写标题'],
-            ]);
+            BusinessException::fail('发布文章必须填写标题', 'title');
         }
 
         if ((string) $categoryId === '' || (string) $categoryId === '0') {
-            throw ValidationException::withMessages([
-                'category_id' => ['发布文章必须选择分类'],
-            ]);
+            BusinessException::fail('发布文章必须选择分类', 'category_id');
         }
 
         ArticleCategory::query()->findOrFail($categoryId);

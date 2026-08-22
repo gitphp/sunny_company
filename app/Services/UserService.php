@@ -14,6 +14,7 @@ namespace App\Services;
 
 use App\Enums\RealAuthStatus;
 use App\Enums\UserStatus;
+use App\Exceptions\BusinessException;
 use App\Http\Resources\Admin\UserResource;
 use App\Models\AuthRole;
 use App\Models\HrDepartment;
@@ -21,7 +22,7 @@ use App\Models\HrPost;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class UserService
@@ -63,6 +64,12 @@ class UserService
 
             return $user->load(['department', 'post', 'roles']);
         });
+
+        Log::info('后台注册用户', [
+            'user_id' => (string) $user->id,
+            'account' => (string) $user->user_name,
+            'operator_id' => (string) $operator->id,
+        ]);
 
         return [
             'message' => '新增成功',
@@ -280,9 +287,7 @@ class UserService
     private function assertNotSelf(User $user, User $operator): void
     {
         if ((string) $user->id === (string) $operator->id) {
-            throw ValidationException::withMessages([
-                'id' => ['不能操作当前登录账号'],
-            ]);
+            BusinessException::fail('不能操作当前登录账号', 'id');
         }
     }
 }

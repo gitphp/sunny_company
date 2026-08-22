@@ -12,12 +12,12 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exceptions\BusinessException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UploadRequest;
 use App\Services\UploadService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Validation\ValidationException;
 
 class UploadController extends Controller
 {
@@ -28,9 +28,7 @@ class UploadController extends Controller
         $file = $request->file('file');
 
         if (! $file instanceof UploadedFile) {
-            throw ValidationException::withMessages([
-                'file' => ['请选择文件'],
-            ]);
+            BusinessException::fail('请选择文件', 'file');
         }
 
         return response()->json($this->uploads->store(

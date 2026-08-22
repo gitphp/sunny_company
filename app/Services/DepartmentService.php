@@ -12,9 +12,9 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessException;
 use App\Models\HrDepartment;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class DepartmentService
 {
@@ -60,9 +60,7 @@ class DepartmentService
             $parent = $this->parent($data);
 
             if ($parent && $this->isSelfOrDescendant($department, $parent)) {
-                throw ValidationException::withMessages([
-                    'parent_id' => ['不能选择自己或下级作为父部门'],
-                ]);
+                BusinessException::fail('不能选择自己或下级作为父部门', 'parent_id');
             }
 
             $department->fill($this->payload($data));
@@ -86,9 +84,7 @@ class DepartmentService
         $department = HrDepartment::query()->findOrFail($id);
 
         if ($department->children()->exists()) {
-            throw ValidationException::withMessages([
-                'id' => ['请先删除下级部门'],
-            ]);
+            BusinessException::fail('请先删除下级部门', 'id');
         }
 
         $department->delete();

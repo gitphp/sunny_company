@@ -13,11 +13,11 @@
 namespace App\Services;
 
 use App\Enums\JobStatus;
+use App\Exceptions\BusinessException;
 use App\Models\BossJob;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class BossJobService
 {
@@ -222,9 +222,7 @@ class BossJobService
         }
 
         if (trim((string) ($data['job_title'] ?? '')) === '') {
-            throw ValidationException::withMessages([
-                'job_title' => ['发布职位必须填写职位名称'],
-            ]);
+            BusinessException::fail('发布职位必须填写职位名称', 'job_title');
         }
     }
 

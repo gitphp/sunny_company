@@ -12,9 +12,9 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessException;
 use App\Models\ArticleCategory;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class ArticleCategoryService
 {
@@ -64,9 +64,7 @@ class ArticleCategoryService
             $parentId = $this->parentId($data);
 
             if ($this->isSelfOrDescendant($category, $parentId)) {
-                throw ValidationException::withMessages([
-                    'parent_id' => ['不能选择自己或下级作为父分类'],
-                ]);
+                BusinessException::fail('不能选择自己或下级作为父分类', 'parent_id');
             }
 
             $category->fill($this->payload($data));
@@ -90,15 +88,11 @@ class ArticleCategoryService
         $category = ArticleCategory::query()->findOrFail($id);
 
         if ($category->children()->exists()) {
-            throw ValidationException::withMessages([
-                'id' => ['请先删除下级分类'],
-            ]);
+            BusinessException::fail('请先删除下级分类', 'id');
         }
 
         if ($category->articles()->exists()) {
-            throw ValidationException::withMessages([
-                'id' => ['该分类下仍有文章，无法删除'],
-            ]);
+            BusinessException::fail('该分类下仍有文章，无法删除', 'id');
         }
 
         $category->delete();

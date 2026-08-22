@@ -10,8 +10,10 @@
  * @link        http://www.budff.com
  */
 
+use App\Exceptions\Handler;
 use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\RecordOperationLog;
+use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -36,4 +38,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(function (Request $request, Throwable $e): bool {
             return $request->is('api/*') || $request->expectsJson();
         });
-    })->create();
+    })
+    ->withSingletons([
+        ExceptionHandler::class => Handler::class,
+    ])
+    ->create();

@@ -12,10 +12,10 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessException;
 use App\Models\AdPosition;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class AdPositionService
 {
@@ -85,9 +85,7 @@ class AdPositionService
         $position = AdPosition::query()->findOrFail($id);
 
         if ($position->materials()->exists()) {
-            throw ValidationException::withMessages([
-                'id' => ['该广告位下仍有素材，无法删除'],
-            ]);
+            BusinessException::fail('该广告位下仍有素材，无法删除', 'id');
         }
 
         $position->delete();

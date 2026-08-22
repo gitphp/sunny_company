@@ -12,10 +12,10 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessException;
 use App\Models\ProductCategory;
 use App\Support\SerialCode;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class ProductCategoryService
 {
@@ -77,9 +77,7 @@ class ProductCategoryService
             $parent = $this->parent($data);
 
             if ($parent && $this->isSelfOrDescendant($category, (string) $parent->id)) {
-                throw ValidationException::withMessages([
-                    'parent_id' => ['不能选择自己或下级作为父分类'],
-                ]);
+                BusinessException::fail('不能选择自己或下级作为父分类', 'parent_id');
             }
 
             $level = $parent ? ((int) $parent->level + 1) : 1;
@@ -109,15 +107,11 @@ class ProductCategoryService
         $category = ProductCategory::query()->findOrFail($id);
 
         if ($category->children()->exists()) {
-            throw ValidationException::withMessages([
-                'id' => ['请先删除下级分类'],
-            ]);
+            BusinessException::fail('请先删除下级分类', 'id');
         }
 
         if ($category->products()->exists()) {
-            throw ValidationException::withMessages([
-                'id' => ['该分类下仍有商品，无法删除'],
-            ]);
+            BusinessException::fail('该分类下仍有商品，无法删除', 'id');
         }
 
         $category->deleted_by = $operatorId ?: null;
@@ -159,9 +153,7 @@ class ProductCategoryService
     private function assertLevel(int $level): void
     {
         if ($level > 3) {
-            throw ValidationException::withMessages([
-                'parent_id' => ['分类最多支持三级'],
-            ]);
+            BusinessException::fail('分类最多支持三级', 'parent_id');
         }
     }
 

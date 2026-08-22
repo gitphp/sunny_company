@@ -12,11 +12,11 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessException;
 use App\Models\AdMaterial;
 use App\Models\AdPosition;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class AdMaterialService
 {
@@ -156,9 +156,7 @@ class AdMaterialService
         $positionId = (string) ($data['position_id'] ?? '0');
 
         if ($positionId === '' || $positionId === '0') {
-            throw ValidationException::withMessages([
-                'position_id' => ['请选择广告位'],
-            ]);
+            BusinessException::fail('请选择广告位', 'position_id');
         }
 
         AdPosition::query()->findOrFail($positionId);
@@ -167,9 +165,7 @@ class AdMaterialService
         $end = $data['end_time'] ?? null;
 
         if ($start && $end && $end < $start) {
-            throw ValidationException::withMessages([
-                'end_time' => ['结束时间不能早于开始时间'],
-            ]);
+            BusinessException::fail('结束时间不能早于开始时间', 'end_time');
         }
 
         return [

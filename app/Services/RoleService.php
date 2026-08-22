@@ -13,9 +13,9 @@
 namespace App\Services;
 
 use App\Enums\RoleType;
+use App\Exceptions\BusinessException;
 use App\Models\AuthRole;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class RoleService
 {
@@ -106,9 +106,7 @@ class RoleService
         $role = AuthRole::query()->findOrFail($id);
 
         if ($role->isSystem()) {
-            throw ValidationException::withMessages([
-                'id' => ['系统内置角色不能删除'],
-            ]);
+            BusinessException::fail('系统内置角色不能删除', 'id');
         }
 
         DB::transaction(function () use ($role): void {
@@ -129,9 +127,7 @@ class RoleService
         $role = AuthRole::query()->findOrFail($id);
 
         if ($role->isSuperAdmin()) {
-            throw ValidationException::withMessages([
-                'id' => ['超级管理员不能禁用'],
-            ]);
+            BusinessException::fail('超级管理员不能禁用', 'id');
         }
 
         $role->forceFill(['role_status' => $status])->save();

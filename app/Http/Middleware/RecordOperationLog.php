@@ -15,6 +15,7 @@ namespace App\Http\Middleware;
 use App\Services\OperationLogService;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
@@ -35,8 +36,8 @@ class RecordOperationLog
 
         try {
             $this->logs->write($this->payload($request, $response));
-        } catch (Throwable) {
-            // 操作日志失败不影响主流程
+        } catch (Throwable $exception) {
+            Log::warning('操作日志写入失败', ['exception' => $exception]);
         }
     }
 

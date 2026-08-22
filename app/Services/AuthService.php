@@ -12,12 +12,13 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessException;
 use App\Http\Resources\Admin\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class AuthService
@@ -35,8 +36,13 @@ class AuthService
     {
         try {
             $user = $this->attempt((string) $data['account'], (string) $data['password']);
-        } catch (ValidationException $exception) {
-            $error = (string) collect($exception->errors())->flatten()->first();
+        } catch (BusinessException $exception) {
+            $error = $exception->getMessage();
+            Log::warning('用户登录失败', [
+                'account' => (string) $data['account'],
+                'ip' => (string) $request->ip(),
+                'reason' => $error,
+            ]);
             $this->writeAuthLog($request, 'LOGIN', 0, null, (string) $data['account'], $error);
             throw $exception;
         }
@@ -49,6 +55,11 @@ class AuthService
             'last_login_at' => now(),
         ])->save();
 
+        Log::info('用户登录成功', [
+            'user_id' => (string) $user->id,
+            'account' => (string) $user->user_name,
+            'ip' => (string) $request->ip(),
+        ]);
         $this->writeAuthLog($request, 'LOGIN', 1, $user, (string) $user->user_name);
 
         return [
@@ -63,6 +74,11 @@ class AuthService
     public function logout(Request $request): array
     {
         $user = $request->user();
+        Log::info('用户退出登录', [
+            'user_id' => (string) ($user?->id ?? ''),
+            'account' => (string) ($user?->user_name ?? ''),
+            'ip' => (string) $request->ip(),
+        ]);
         $this->writeAuthLog($request, 'LOGOUT', 1, $user, (string) ($user?->user_name ?? ''), '', 'logout');
 
         Auth::logout();
@@ -110,15 +126,11 @@ class AuthService
             ->first();
 
         if (! $user || ! Hash::check($password, $user->password_hash)) {
-            throw ValidationException::withMessages([
-                'account' => ['账号或密码错误'],
-            ]);
+            BusinessException::fail('账号或密码错误', 'account');
         }
 
         if (! $user->isLoginAllowed()) {
-            throw ValidationException::withMessages([
-                'account' => [$user->loginDeniedMessage()],
-            ]);
+            BusinessException::fail($user->loginDeniedMessage(), 'account');
         }
 
         return $user;
@@ -149,8 +161,8 @@ class AuthService
                 'request_url' => mb_substr($request->fullUrl(), 0, 255),
                 'method_fun' => (string) ($request->route()?->getActionName() ?? ''),
             ]);
-        } catch (Throwable) {
-            //
+        } catch (Throwable $exception) {
+            Log::warning('认证操作日志写入失败', ['exception' => $exception]);
         }
     }
 }
