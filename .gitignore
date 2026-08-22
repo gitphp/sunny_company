@@ -314,7 +314,6 @@ dist
 /.zed
 /auth.json
 /node_modules
-/public/build
 /public/hot
 # 打开上传的图片文件夹
 #/public/storage
