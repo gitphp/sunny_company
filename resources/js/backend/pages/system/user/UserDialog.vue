@@ -1,3 +1,14 @@
+<!--
+/**
+ * 用户编辑弹窗
+ *
+ * @package     Resources\Backend\Pages\System\User
+ * @license     MIT License (MIT)
+ * @author      yang song <githup@163.com> QQ4873473
+ * @copyright   Copyright (c) 2024 YourCompany. All rights reserved.
+ * @link        http://www.budff.com
+ */
+-->
 <template>
     <el-dialog :model-value="modelValue" :title="form.id ? '修改用户' : '新增用户'" width="640px" @close="onClose" @update:model-value="(visible) => !visible && onClose()">
         <el-form ref="formRef" :model="form" :rules="rules" label-width="90px">

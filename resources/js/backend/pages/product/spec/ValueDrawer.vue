@@ -1,3 +1,14 @@
+<!--
+/**
+ * 规格值抽屉
+ *
+ * @package     Resources\Backend\Pages\Product\Spec
+ * @license     MIT License (MIT)
+ * @author      yang song <githup@163.com> QQ4873473
+ * @copyright   Copyright (c) 2024 YourCompany. All rights reserved.
+ * @link        http://www.budff.com
+ */
+-->
 <template>
     <el-drawer :model-value="modelValue" :title="spec ? `规格值 · ${spec.spec_name}` : '规格值'" size="480px" @close="onClose" @update:model-value="(visible) => !visible && onClose()">
         <div class="toolbar">

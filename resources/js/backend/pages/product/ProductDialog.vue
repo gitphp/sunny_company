@@ -1,3 +1,14 @@
+<!--
+/**
+ * 商品编辑弹窗
+ *
+ * @package     Resources\Backend\Pages\Product
+ * @license     MIT License (MIT)
+ * @author      yang song <githup@163.com> QQ4873473
+ * @copyright   Copyright (c) 2024 YourCompany. All rights reserved.
+ * @link        http://www.budff.com
+ */
+-->
 <template>
     <el-dialog :model-value="modelValue" :title="form.id ? '修改商品' : '新增商品'" width="920px" top="4vh" @close="onClose" @update:model-value="(visible) => !visible && onClose()">
         <el-form ref="formRef" v-loading="loading" :model="form" :rules="rules" label-width="90px">

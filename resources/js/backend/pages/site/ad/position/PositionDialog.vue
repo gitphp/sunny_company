@@ -1,3 +1,14 @@
+<!--
+/**
+ * 广告位编辑弹窗
+ *
+ * @package     Resources\Backend\Pages\Site\Ad\Position
+ * @license     MIT License (MIT)
+ * @author      yang song <githup@163.com> QQ4873473
+ * @copyright   Copyright (c) 2024 YourCompany. All rights reserved.
+ * @link        http://www.budff.com
+ */
+-->
 <template>
     <el-dialog :model-value="modelValue" :title="form.id ? '修改广告位' : '新增广告位'" width="520px" @close="onClose" @update:model-value="(visible) => !visible && onClose()">
         <el-form ref="formRef" :model="form" :rules="rules" label-width="100px">

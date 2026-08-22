@@ -1,3 +1,14 @@
+<!--
+/**
+ * 后台主布局
+ *
+ * @package     Resources\Backend\Layout
+ * @license     MIT License (MIT)
+ * @author      yang song <githup@163.com> QQ4873473
+ * @copyright   Copyright (c) 2024 YourCompany. All rights reserved.
+ * @link        http://www.budff.com
+ */
+-->
 <template>
     <div class="admin-layout">
         <aside class="admin-sidebar" :class="{ 'is-collapse': appStore.collapsed }">

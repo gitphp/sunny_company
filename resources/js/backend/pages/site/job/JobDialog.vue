@@ -1,3 +1,14 @@
+<!--
+/**
+ * 招聘职位编辑弹窗
+ *
+ * @package     Resources\Backend\Pages\Site\Job
+ * @license     MIT License (MIT)
+ * @author      yang song <githup@163.com> QQ4873473
+ * @copyright   Copyright (c) 2024 YourCompany. All rights reserved.
+ * @link        http://www.budff.com
+ */
+-->
 <template>
     <el-dialog :model-value="modelValue" :title="form.id ? '修改职位' : '新增职位'" width="680px" top="6vh" @close="onClose" @update:model-value="(visible) => !visible && onClose()">
         <el-form ref="formRef" v-loading="loading" :model="form" :rules="rules" label-width="90px">

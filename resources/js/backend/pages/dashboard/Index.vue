@@ -1,3 +1,14 @@
+<!--
+/**
+ * 仪表盘页面
+ *
+ * @package     Resources\Backend\Pages\Dashboard
+ * @license     MIT License (MIT)
+ * @author      yang song <githup@163.com> QQ4873473
+ * @copyright   Copyright (c) 2024 YourCompany. All rights reserved.
+ * @link        http://www.budff.com
+ */
+-->
 <template>
     <div v-loading="loading" class="dashboard">
         <section class="dash-welcome">

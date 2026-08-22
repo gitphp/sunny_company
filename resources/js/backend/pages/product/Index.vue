@@ -1,3 +1,14 @@
+<!--
+/**
+ * 商品管理页面
+ *
+ * @package     Resources\Backend\Pages\Product
+ * @license     MIT License (MIT)
+ * @author      yang song <githup@163.com> QQ4873473
+ * @copyright   Copyright (c) 2024 YourCompany. All rights reserved.
+ * @link        http://www.budff.com
+ */
+-->
 <template>
     <div class="app-container">
         <div class="split-layout">

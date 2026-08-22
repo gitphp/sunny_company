@@ -1,5 +1,15 @@
 <?php
 
+/**
+ * 操作日志记录中间件
+ *
+ * @package     App\Http\Middleware
+ * @license     MIT License (MIT)
+ * @author      yang song <githup@163.com> QQ4873473
+ * @copyright   Copyright (c) 2024 YourCompany. All rights reserved.
+ * @link        http://www.budff.com
+ */
+
 namespace App\Http\Middleware;
 
 use App\Services\OperationLogService;

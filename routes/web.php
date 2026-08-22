@@ -1,5 +1,15 @@
 <?php
 
+/**
+ * Web 路由定义
+ *
+ * @package     Routes
+ * @license     MIT License (MIT)
+ * @author      yang song <githup@163.com> QQ4873473
+ * @copyright   Copyright (c) 2024 YourCompany. All rights reserved.
+ * @link        http://www.budff.com
+ */
+
 use App\Http\Controllers\AdController;
 use App\Http\Controllers\Admin\AdMaterialController;
 use App\Http\Controllers\Admin\AdPositionController;

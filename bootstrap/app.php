@@ -1,5 +1,15 @@
 <?php
 
+/**
+ * 应用启动配置
+ *
+ * @package     Bootstrap
+ * @license     MIT License (MIT)
+ * @author      yang song <githup@163.com> QQ4873473
+ * @copyright   Copyright (c) 2024 YourCompany. All rights reserved.
+ * @link        http://www.budff.com
+ */
+
 use App\Http\Middleware\EnsurePermission;
 use App\Http\Middleware\RecordOperationLog;
 use Illuminate\Foundation\Application;

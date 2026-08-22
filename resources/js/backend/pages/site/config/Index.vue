@@ -1,3 +1,14 @@
+<!--
+/**
+ * 站点配置页面
+ *
+ * @package     Resources\Backend\Pages\Site\Config
+ * @license     MIT License (MIT)
+ * @author      yang song <githup@163.com> QQ4873473
+ * @copyright   Copyright (c) 2024 YourCompany. All rights reserved.
+ * @link        http://www.budff.com
+ */
+-->
 <template>
     <div class="app-container">
         <el-tabs v-model="active">

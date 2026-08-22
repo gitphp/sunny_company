@@ -1,3 +1,14 @@
+<!--
+/**
+ * 顶部导航
+ *
+ * @package     Resources\Backend\Layout
+ * @license     MIT License (MIT)
+ * @author      yang song <githup@163.com> QQ4873473
+ * @copyright   Copyright (c) 2024 YourCompany. All rights reserved.
+ * @link        http://www.budff.com
+ */
+-->
 <template>
     <header class="admin-navbar">
         <div class="admin-navbar-left">

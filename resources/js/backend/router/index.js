@@ -1,3 +1,13 @@
+/**
+ * 后台路由
+ *
+ * @package     Resources\Backend\Router
+ * @license     MIT License (MIT)
+ * @author      yang song <githup@163.com> QQ4873473
+ * @copyright   Copyright (c) 2024 YourCompany. All rights reserved.
+ * @link        http://www.budff.com
+ */
+
 import { createRouter, createWebHistory } from 'vue-router';
 import Layout from '../layout/index.vue';
 import { useUserStore } from '../stores/user';

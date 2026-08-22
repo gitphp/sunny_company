@@ -1,5 +1,15 @@
 <?php
 
+/**
+ * 商品SKU模型
+ *
+ * @package     App\Models
+ * @license     MIT License (MIT)
+ * @author      yang song <githup@163.com> QQ4873473
+ * @copyright   Copyright (c) 2024 YourCompany. All rights reserved.
+ * @link        http://www.budff.com
+ */
+
 namespace App\Models;
 
 use App\Support\Snowflake;

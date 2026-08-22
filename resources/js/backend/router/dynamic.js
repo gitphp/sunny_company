@@ -1,3 +1,13 @@
+/**
+ * 动态路由
+ *
+ * @package     Resources\Backend\Router
+ * @license     MIT License (MIT)
+ * @author      yang song <githup@163.com> QQ4873473
+ * @copyright   Copyright (c) 2024 YourCompany. All rights reserved.
+ * @link        http://www.budff.com
+ */
+
 const modules = import.meta.glob('../pages/**/*.vue');
 
 export function loadView(component) {
