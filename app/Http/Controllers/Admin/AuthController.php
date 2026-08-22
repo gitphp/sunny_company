@@ -3,66 +3,31 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Auth\LoginRequest;
-use App\Http\Resources\Admin\UserResource;
-use App\Services\RbacService;
-use App\Services\UserAuthenticator;
+use App\Http\Requests\Admin\AuthRequest;
+use App\Services\AuthService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
-    public function __construct(private readonly RbacService $rbac) {}
+    public function __construct(private readonly AuthService $auth) {}
 
-    public function login(LoginRequest $request, UserAuthenticator $authenticator): JsonResponse
+    public function login(AuthRequest $request): JsonResponse
     {
-        $user = $authenticator->attempt(
-            $request->string('account')->toString(),
-            $request->string('password')->toString(),
-        );
-
-        Auth::login($user);
-        $request->session()->regenerate();
-        $authenticator->recordLogin($user, $request);
-
-        return response()->json([
-            'message' => '登录成功',
-            'user' => UserResource::make($user->fresh()->load(['department', 'roles']))->resolve(),
-        ]);
+        return response()->json($this->auth->login($request->validated(), $request));
     }
 
-    public function logout(Request $request): JsonResponse
+    public function logout(AuthRequest $request): JsonResponse
     {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return response()->json([
-            'message' => '已退出登录',
-        ]);
+        return response()->json($this->auth->logout($request));
     }
 
-    public function user(Request $request): JsonResponse
+    public function user(AuthRequest $request): JsonResponse
     {
-        return response()->json([
-            'user' => UserResource::make($request->user()->load(['department', 'roles']))->resolve(),
-        ]);
+        return response()->json($this->auth->current($request->user()));
     }
 
-    public function menus(Request $request): JsonResponse
+    public function menus(AuthRequest $request): JsonResponse
     {
-        $user = $request->user();
-
-        return response()->json([
-            'menus' => $this->rbac->sidebarMenus($user),
-            'permissions' => $this->rbac->permissionCodes($user)->values(),
-            'is_super' => $this->rbac->isSuperAdmin($user),
-            'roles' => $this->rbac->activeRoles($user)->map(fn ($role) => [
-                'id' => (string) $role->id,
-                'role_name' => $role->role_name,
-                'role_code' => $role->role_code,
-            ])->values(),
-        ]);
+        return response()->json($this->auth->menus($request->user()));
     }
 }

@@ -3,15 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\AuthPermission;
+use App\Http\Requests\Admin\PermissionRequest;
+use App\Services\PermissionService;
 use Illuminate\Http\JsonResponse;
 
 class PermissionController extends Controller
 {
-    public function index(): JsonResponse
+    public function __construct(private readonly PermissionService $permissions) {}
+
+    public function index(PermissionRequest $request): JsonResponse
     {
-        return response()->json([
-            'permissions' => AuthPermission::buildTree(AuthPermission::ordered()),
-        ]);
+        return response()->json($this->permissions->tree());
     }
 }

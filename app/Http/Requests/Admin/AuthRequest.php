@@ -1,20 +1,15 @@
 <?php
 
-namespace App\Http\Requests\Auth;
+namespace App\Http\Requests\Admin;
 
-use Illuminate\Foundation\Http\FormRequest;
+use App\Http\Requests\SceneRequest;
 
-class LoginRequest extends FormRequest
+class AuthRequest extends SceneRequest
 {
-    public function authorize(): bool
-    {
-        return true;
-    }
-
     /**
      * @return array<string, mixed>
      */
-    public function rules(): array
+    public function loginRules(): array
     {
         return [
             'account' => ['required', 'string', 'max:128'],

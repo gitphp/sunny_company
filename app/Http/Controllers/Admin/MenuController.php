@@ -3,15 +3,16 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\AuthMenu;
+use App\Http\Requests\Admin\MenuRequest;
+use App\Services\MenuService;
 use Illuminate\Http\JsonResponse;
 
 class MenuController extends Controller
 {
-    public function index(): JsonResponse
+    public function __construct(private readonly MenuService $menus) {}
+
+    public function index(MenuRequest $request): JsonResponse
     {
-        return response()->json([
-            'menus' => AuthMenu::buildTree(AuthMenu::ordered()),
-        ]);
+        return response()->json($this->menus->tree());
     }
 }
