@@ -98,6 +98,17 @@ class ProductRequest extends SceneRequest
             'skus.*.sort_order' => ['nullable', 'integer', 'min:0'],
             'skus.*.spec_value_ids' => ['nullable', 'array'],
             'skus.*.spec_value_ids.*' => ['string'],
+            'media' => ['nullable', 'array'],
+            'media.*.id' => ['nullable', 'string'],
+            'media.*.media_type' => ['required', 'integer', 'in:1,2,3,4,5'],
+            'media.*.file_url' => ['required', 'string'],
+            'media.*.file_name' => ['nullable', 'string', 'max:255'],
+            'media.*.file_key' => ['nullable', 'string', 'max:512'],
+            'media.*.storage_provider' => ['nullable', 'string', 'max:32'],
+            'media.*.extension' => ['nullable', 'string', 'max:16'],
+            'media.*.file_size' => ['nullable', 'integer', 'min:0'],
+            'media.*.file_type' => ['nullable', 'string', 'max:32'],
+            'media.*.sort_order' => ['nullable', 'integer', 'min:0'],
         ];
     }
 
@@ -110,6 +121,7 @@ class ProductRequest extends SceneRequest
             'product_name' => '商品名称',
             'category_id' => '商品分类',
             'skus' => 'SKU',
+            'media' => '商品图片',
         ];
     }
 }

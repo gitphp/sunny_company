@@ -12,9 +12,11 @@
 
 namespace App\Services;
 
+use App\Enums\ProductMediaType;
 use App\Models\Product;
 use App\Models\ProductBrand;
 use App\Models\ProductCategory;
+use App\Models\ProductMedia;
 use App\Models\ProductSku;
 use App\Models\ProductSkuSpecValue;
 use App\Models\ProductSpecificationValue;
@@ -67,7 +69,7 @@ class ProductService
     public function find(string $id): array
     {
         $product = Product::query()
-            ->with(['category:id,category_name', 'brand:id,brand_name', 'skus.specValues.spec', 'skus.specValues.specValue'])
+            ->with(['category:id,category_name', 'brand:id,brand_name', 'skus.specValues.spec', 'skus.specValues.specValue', 'media'])
             ->findOrFail($id);
 
         return [
@@ -88,9 +90,10 @@ class ProductService
             $product->created_by = $operatorId ?: null;
             $product->save();
             $this->syncSkus($product, $data['skus'] ?? [], $operatorId);
+            $this->syncMedia($product, $this->mediaRows($data), $operatorId);
             $this->refreshProductCount((string) $product->category_id);
 
-            return $product->fresh()->load(['category:id,category_name', 'brand:id,brand_name', 'skus.specValues.spec', 'skus.specValues.specValue']);
+            return $product->fresh()->load(['category:id,category_name', 'brand:id,brand_name', 'skus.specValues.spec', 'skus.specValues.specValue', 'media']);
         });
 
         return [
@@ -113,10 +116,11 @@ class ProductService
             $product->updated_by = $operatorId ?: null;
             $product->save();
             $this->syncSkus($product, $data['skus'] ?? [], $operatorId);
+            $this->syncMedia($product, $this->mediaRows($data), $operatorId);
             $this->refreshProductCount($oldCategoryId);
             $this->refreshProductCount((string) $product->category_id);
 
-            return $product->fresh()->load(['category:id,category_name', 'brand:id,brand_name', 'skus.specValues.spec', 'skus.specValues.specValue']);
+            return $product->fresh()->load(['category:id,category_name', 'brand:id,brand_name', 'skus.specValues.spec', 'skus.specValues.specValue', 'media']);
         });
 
         return [
@@ -219,7 +223,7 @@ class ProductService
     public function publicFind(string $id): array
     {
         $product = Product::query()
-            ->with(['category:id,category_name', 'brand:id,brand_name', 'skus.specValues.spec', 'skus.specValues.specValue'])
+            ->with(['category:id,category_name', 'brand:id,brand_name', 'skus.specValues.spec', 'skus.specValues.specValue', 'media'])
             ->where('product_status', 1)
             ->find($id);
 
@@ -437,6 +441,7 @@ class ProductService
     private function deleteProduct(Product $product, string $operatorId): void
     {
         $product->skus()->get()->each(fn (ProductSku $sku) => $this->deleteSku($sku, $operatorId));
+        $product->media()->get()->each(fn (ProductMedia $media) => $this->deleteMedia($media, $operatorId));
         $product->deleted_by = $operatorId ?: null;
         $product->save();
         $product->delete();
@@ -452,6 +457,104 @@ class ProductService
         $sku->deleted_by = $operatorId ?: null;
         $sku->save();
         $sku->delete();
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return list<array<string, mixed>>
+     */
+    private function mediaRows(array $data): array
+    {
+        if (array_key_exists('media', $data)) {
+            return is_array($data['media']) ? $data['media'] : [];
+        }
+
+        $url = trim((string) ($data['main_image_url'] ?? ''));
+
+        if ($url === '') {
+            return [];
+        }
+
+        return [[
+            'media_type' => ProductMediaType::MainImage->value,
+            'file_url' => $url,
+            'file_name' => '',
+            'file_key' => '',
+            'storage_provider' => 'local',
+            'sort_order' => 100,
+        ]];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     */
+    private function syncMedia(Product $product, array $rows, string $operatorId): void
+    {
+        $keepIds = [];
+
+        foreach ($rows as $index => $row) {
+            $url = trim((string) ($row['file_url'] ?? ''));
+
+            if ($url === '') {
+                continue;
+            }
+
+            $mediaId = (string) ($row['id'] ?? '');
+            $media = $mediaId !== ''
+                ? ProductMedia::query()->where('product_id', $product->id)->find($mediaId)
+                : null;
+
+            if (! $media) {
+                $media = new ProductMedia;
+                $media->product_id = $product->id;
+                $media->created_by = $operatorId ?: null;
+            } else {
+                $media->updated_by = $operatorId ?: null;
+            }
+
+            $type = (int) ($row['media_type'] ?? ProductMediaType::DetailImage->value);
+
+            if (ProductMediaType::tryFrom($type) === null) {
+                throw ValidationException::withMessages([
+                    'media' => ['媒体类型无效'],
+                ]);
+            }
+
+            $media->fill([
+                'media_type' => $type,
+                'file_url' => $url,
+                'file_name' => mb_substr((string) ($row['file_name'] ?? ''), 0, 255),
+                'file_key' => mb_substr((string) ($row['file_key'] ?? ''), 0, 512),
+                'storage_provider' => mb_substr((string) ($row['storage_provider'] ?: 'local'), 0, 32),
+                'extension' => mb_substr((string) ($row['extension'] ?? ''), 0, 16),
+                'file_size' => (int) ($row['file_size'] ?? 0),
+                'file_type' => mb_substr((string) ($row['file_type'] ?? ''), 0, 32),
+                'sort_order' => (int) ($row['sort_order'] ?? (100 - $index)),
+            ]);
+            $media->save();
+            $keepIds[] = (string) $media->id;
+        }
+
+        $product->media()->whereNotIn('id', $keepIds !== [] ? $keepIds : [0])->get()->each(
+            fn (ProductMedia $media) => $this->deleteMedia($media, $operatorId)
+        );
+
+        $main = ProductMedia::query()
+            ->where('product_id', $product->id)
+            ->where('media_type', ProductMediaType::MainImage->value)
+            ->orderByDesc('sort_order')
+            ->orderBy('id')
+            ->first();
+
+        $product->main_image_url = $main?->file_url ?? '';
+        $product->save();
+    }
+
+    private function deleteMedia(ProductMedia $media, string $operatorId): void
+    {
+        $media->deleted_by = $operatorId ?: null;
+        $media->save();
+        $media->delete();
     }
 
     private function refreshProductCount(string $categoryId): void
@@ -493,11 +596,35 @@ class ProductService
         ];
 
         if ($detail) {
+            $media = $product->media ?? collect();
             $data['short_desc'] = $product->short_desc;
             $data['skus'] = $skus->map(fn (ProductSku $sku) => $this->transformSku($sku))->values();
+            $data['media'] = $media->map(fn (ProductMedia $item) => $this->transformMedia($item))->values();
         }
 
         return $data;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function transformMedia(ProductMedia $media): array
+    {
+        $type = ProductMediaType::tryFrom((int) $media->media_type);
+
+        return [
+            'id' => (string) $media->id,
+            'media_type' => (int) $media->media_type,
+            'media_type_text' => $type?->label() ?? '',
+            'file_url' => $media->file_url,
+            'file_name' => $media->file_name,
+            'file_key' => $media->file_key,
+            'storage_provider' => $media->storage_provider,
+            'extension' => $media->extension,
+            'file_size' => (int) $media->file_size,
+            'file_type' => $media->file_type,
+            'sort_order' => (int) $media->sort_order,
+        ];
     }
 
     /**

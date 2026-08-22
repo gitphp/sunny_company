@@ -49,6 +49,19 @@
                 </div>
                 <el-table v-loading="loading" :data="rows" border @selection-change="(value) => (selected = value)">
                     <el-table-column type="selection" width="50" align="center" />
+                    <el-table-column label="主图" width="76" align="center">
+                        <template #default="{ row }">
+                            <el-image
+                                v-if="row.main_image_url"
+                                :src="row.main_image_url"
+                                :preview-src-list="[row.main_image_url]"
+                                preview-teleported
+                                fit="cover"
+                                style="width:48px;height:48px;border-radius:4px"
+                            />
+                            <span v-else>-</span>
+                        </template>
+                    </el-table-column>
                     <el-table-column label="编码" prop="auto_code" width="120" />
                     <el-table-column label="商品名称" prop="product_name" min-width="160" show-overflow-tooltip />
                     <el-table-column label="分类" prop="category_name" min-width="110" />

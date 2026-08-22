@@ -48,7 +48,7 @@ class RecordOperationLog
 
         $path = $request->path();
 
-        if (str_contains($path, 'operation-logs') || str_ends_with($path, '/logout') || str_contains($path, '/options/') || str_contains($path, '/ai/chat')) {
+        if (str_contains($path, 'operation-logs') || str_ends_with($path, '/logout') || str_contains($path, '/options/') || str_contains($path, '/ai/chat') || str_contains($path, '/uploads')) {
             return false;
         }
 

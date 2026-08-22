@@ -68,4 +68,9 @@ class Product extends Model
     {
         return $this->hasMany(ProductSku::class, 'product_id')->orderByDesc('sort_order')->orderBy('id');
     }
+
+    public function media(): HasMany
+    {
+        return $this->hasMany(ProductMedia::class, 'product_id')->orderByDesc('sort_order')->orderBy('id');
+    }
 }

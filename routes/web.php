@@ -34,6 +34,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductSpecificationController;
 use App\Http\Controllers\Admin\RoleController;
 use App\Http\Controllers\Admin\SiteConfigController;
+use App\Http\Controllers\Admin\UploadController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\FeedbackController as PublicFeedbackController;
 use App\Http\Controllers\JobController as PublicJobController;
@@ -66,6 +67,8 @@ Route::prefix('api')->group(function () {
             Route::put('/ai/providers/{provider}', [AiProviderController::class, 'update'])->middleware('permission:ai:config');
             Route::delete('/ai/providers/{provider}', [AiProviderController::class, 'destroy'])->middleware('permission:ai:config');
             Route::post('/ai/chat', [AiController::class, 'chat'])->middleware(['permission:ai:chat', 'throttle:30,1']);
+
+            Route::post('/uploads', [UploadController::class, 'store'])->middleware('throttle:30,1');
 
             Route::get('/options/roles', [OptionController::class, 'roles']);
             Route::get('/options/departments', [OptionController::class, 'departments']);

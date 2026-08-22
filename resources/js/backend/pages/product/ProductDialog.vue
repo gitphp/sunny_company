@@ -63,9 +63,6 @@
                             </el-form-item>
                         </el-col>
                     </el-row>
-                    <el-form-item label="主图">
-                        <el-input v-model="form.main_image_url" placeholder="图片 URL" />
-                    </el-form-item>
                     <el-form-item label="状态">
                         <el-radio-group v-model="form.product_status">
                             <el-radio :value="1">上架</el-radio>
@@ -121,7 +118,48 @@
                         </el-table-column>
                     </el-table>
                 </el-tab-pane>
+                <el-tab-pane label="图片" name="media">
+                    <el-form-item label="主图">
+                        <div>
+                            <el-upload
+                                v-model:file-list="mainFiles"
+                                list-type="picture-card"
+                                accept="image/jpeg,image/png,image/gif,image/webp,image/bmp"
+                                :http-request="(option) => handleUpload(option, 1)"
+                                :on-preview="previewFile"
+                            >
+                                <el-icon><Plus /></el-icon>
+                            </el-upload>
+                            <el-input v-model="urlDraft.main" placeholder="或粘贴图片 URL 后添加" style="max-width:360px;margin-top:8px">
+                                <template #append>
+                                    <el-button @click="addMediaUrl(1)">添加</el-button>
+                                </template>
+                            </el-input>
+                        </div>
+                    </el-form-item>
+                    <el-form-item label="详情图">
+                        <div>
+                            <el-upload
+                                v-model:file-list="detailFiles"
+                                list-type="picture-card"
+                                accept="image/jpeg,image/png,image/gif,image/webp,image/bmp"
+                                :http-request="(option) => handleUpload(option, 2)"
+                                :on-preview="previewFile"
+                            >
+                                <el-icon><Plus /></el-icon>
+                            </el-upload>
+                            <el-input v-model="urlDraft.detail" placeholder="或粘贴图片 URL 后添加" style="max-width:360px;margin-top:8px">
+                                <template #append>
+                                    <el-button @click="addMediaUrl(2)">添加</el-button>
+                                </template>
+                            </el-input>
+                        </div>
+                    </el-form-item>
+                </el-tab-pane>
             </el-tabs>
+            <el-dialog v-model="preview.visible" width="640px" append-to-body title="预览">
+                <img :src="preview.url" alt="" style="display:block;width:100%" />
+            </el-dialog>
         </el-form>
         <template #footer>
             <el-button @click="onClose">取消</el-button>
@@ -135,6 +173,7 @@ import { computed, reactive, ref, watch } from 'vue';
 import { ElMessage } from 'element-plus';
 import { createProduct, fetchProduct, updateProduct } from '../../api/product';
 import { fetchOptionProductBrands, fetchOptionProductCategories, fetchOptionProductSpecs } from '../../api/options';
+import { uploadFile } from '../../api/upload';
 
 const props = defineProps({
     modelValue: Boolean,
@@ -157,6 +196,10 @@ const categories = ref([]);
 const specs = ref([]);
 const selectedSpecIds = ref([]);
 const pickedValues = reactive({});
+const mainFiles = ref([]);
+const detailFiles = ref([]);
+const urlDraft = reactive({ main: '', detail: '' });
+const preview = reactive({ visible: false, url: '' });
 const form = reactive(emptyForm());
 const rules = {
     product_name: [{ required: true, message: '请输入商品名称', trigger: 'blur' }],
@@ -186,6 +229,7 @@ watch(
                     })),
                 });
                 restoreSpecPicker(form.skus);
+                fillMedia(data.product);
             } finally {
                 loading.value = false;
             }
@@ -195,6 +239,10 @@ watch(
             });
             selectedSpecIds.value = [];
             Object.keys(pickedValues).forEach((key) => delete pickedValues[key]);
+            mainFiles.value = [];
+            detailFiles.value = [];
+            urlDraft.main = '';
+            urlDraft.detail = '';
         }
     },
 );
@@ -213,7 +261,101 @@ function emptyForm() {
         product_status: 1,
         sort_order: 0,
         skus: [],
+        media: [],
     };
+}
+
+function toUploadFile(item) {
+    return {
+        uid: item.id || item.file_url,
+        name: item.file_name || 'image',
+        url: item.file_url,
+        status: 'success',
+        response: item,
+    };
+}
+
+function fillMedia(product) {
+    const media = product.media || [];
+    const mains = media.filter((item) => item.media_type === 1);
+    const details = media.filter((item) => item.media_type === 2);
+    if (mains.length === 0 && product.main_image_url) {
+        mains.push({
+            id: '',
+            media_type: 1,
+            file_url: product.main_image_url,
+            file_name: 'main',
+        });
+    }
+    mainFiles.value = mains.map(toUploadFile);
+    detailFiles.value = details.map(toUploadFile);
+}
+
+async function handleUpload(option, type) {
+    try {
+        const { data } = await uploadFile(option.file);
+        option.file.url = data.file.file_url;
+        option.onSuccess({ ...data.file, media_type: type });
+    } catch (error) {
+        option.onError(error);
+        ElMessage.error(error.response?.data?.errors?.file?.[0] || error.response?.data?.message || '上传失败');
+    }
+}
+
+function addMediaUrl(type) {
+    const url = (type === 1 ? urlDraft.main : urlDraft.detail).trim();
+    if (!url) {
+        ElMessage.warning('请填写图片地址');
+        return;
+    }
+    const item = toUploadFile({
+        id: '',
+        media_type: type,
+        file_url: url,
+        file_name: url.split('/').pop() || 'image',
+        storage_provider: 'local',
+    });
+    if (type === 1) {
+        mainFiles.value = [...mainFiles.value, item];
+        urlDraft.main = '';
+    } else {
+        detailFiles.value = [...detailFiles.value, item];
+        urlDraft.detail = '';
+    }
+}
+
+function previewFile(file) {
+    preview.url = file.url || file.response?.file_url || '';
+    if (preview.url) {
+        preview.visible = true;
+    }
+}
+
+function collectMedia() {
+    return [
+        ...mediaFromList(mainFiles.value, 1),
+        ...mediaFromList(detailFiles.value, 2),
+    ];
+}
+
+function mediaFromList(list, type) {
+    return list
+        .filter((item) => item.status === 'success' && (item.url || item.response?.file_url))
+        .map((item, index) => {
+            const saved = item.response || {};
+            return {
+                id: saved.id || '',
+                media_type: type,
+                file_url: saved.file_url || item.url,
+                file_name: item.name || saved.file_name || '',
+                file_key: saved.file_key || '',
+                storage_provider: saved.storage_provider || 'local',
+                extension: saved.extension || '',
+                file_size: saved.file_size || 0,
+                file_type: saved.file_type || '',
+                sort_order: 100 - index,
+            };
+        });
 }
 
 async function loadOptions() {
@@ -301,7 +443,12 @@ async function submit() {
     await formRef.value.validate();
     saving.value = true;
     try {
-        const payload = { ...form };
+        const media = collectMedia();
+        const payload = {
+            ...form,
+            media,
+            main_image_url: media.find((item) => item.media_type === 1)?.file_url || '',
+        };
         if (form.id) {
             await updateProduct(form.id, payload);
             ElMessage.success('修改成功');
